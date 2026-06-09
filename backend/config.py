@@ -1,0 +1,82 @@
+"""
+Responsible for parsing and centralizing configuration settings from environment variables.
+"""
+
+import os
+from dataclasses import dataclass, field
+from pathlib import Path
+from dotenv import load_dotenv
+
+load_dotenv()
+
+@dataclass
+class Settings:
+    port: int = field(default_factory=lambda: int(os.getenv("IDEOGRAM_PORT", 8000)))
+    models_path: Path = field(default_factory=lambda: Path(os.getenv("IDEOGRAM_MODELS_PATH", "./models")).absolute())
+    main_model: str = field(default_factory=lambda: os.getenv("IDEOGRAM_MAIN_MODEL", "ideogram4-int8-ConvRot.safetensors"))
+    uncond_model: str = field(default_factory=lambda: os.getenv("IDEOGRAM_UNCOND_MODEL", "ideogram4-unconditional-int8-ConvRot.safetensors"))
+    text_encoder: str = field(default_factory=lambda: os.getenv("IDEOGRAM_TEXT_ENCODER", "qwen3vl_8b_fp8_scaled.safetensors"))
+    vae: str = field(default_factory=lambda: os.getenv("IDEOGRAM_VAE", "flux_vae.safetensors"))
+    device: str = field(default_factory=lambda: os.getenv("IDEOGRAM_DEVICE", "cuda"))
+    output_path: Path = field(default_factory=lambda: Path(os.getenv("IDEOGRAM_OUTPUT_PATH", "./outputs")).absolute())
+
+    def __post_init__(self):
+        # Auto-create output directory
+        self.output_path.mkdir(parents=True, exist_ok=True)
+
+    def validate(self) -> dict:
+        """Validates existence of paths and models, returning a report."""
+        from backend.engine.model_registry import ModelRegistry
+        model_checks = ModelRegistry.check_files()
+        report = {
+            "models_path_exists": self.models_path.exists(),
+            "main_model_exists": model_checks.get("main_model", False),
+            "uncond_model_exists": model_checks.get("uncond_model", False),
+            "text_encoder_exists": model_checks.get("text_encoder", False),
+            "vae_exists": model_checks.get("vae", False),
+            "output_path_exists": self.output_path.exists()
+        }
+        return report
+
+    def update_settings(self, data: dict):
+        """Updates in-memory settings and writes them to the .env file."""
+        if "models_path" in data and data["models_path"]:
+            self.models_path = Path(data["models_path"]).absolute()
+        if "main_model" in data and data["main_model"]:
+            self.main_model = data["main_model"]
+        if "uncond_model" in data and data["uncond_model"]:
+            self.uncond_model = data["uncond_model"]
+        if "text_encoder" in data and data["text_encoder"]:
+            self.text_encoder = data["text_encoder"]
+        if "vae" in data and data["vae"]:
+            self.vae = data["vae"]
+        if "output_path" in data and data["output_path"]:
+            self.output_path = Path(data["output_path"]).absolute()
+            self.output_path.mkdir(parents=True, exist_ok=True)
+        if "port" in data and data["port"]:
+            try:
+                self.port = int(data["port"])
+            except ValueError:
+                pass
+        if "device" in data and data["device"]:
+            self.device = data["device"]
+
+        # Write out to .env file
+        env_path = Path(".env")
+        mapping = {
+            "IDEOGRAM_PORT": str(self.port),
+            "IDEOGRAM_MODELS_PATH": str(self.models_path).replace("\\", "/"),
+            "IDEOGRAM_MAIN_MODEL": self.main_model,
+            "IDEOGRAM_UNCOND_MODEL": self.uncond_model,
+            "IDEOGRAM_TEXT_ENCODER": str(self.text_encoder).replace("\\", "/"),
+            "IDEOGRAM_VAE": str(self.vae).replace("\\", "/"),
+            "IDEOGRAM_DEVICE": self.device,
+            "IDEOGRAM_OUTPUT_PATH": str(self.output_path).replace("\\", "/"),
+        }
+        with open(env_path, "w", encoding="utf-8") as f:
+            f.write("# Ideogram 4 Local App Configurations\n")
+            for key, val in mapping.items():
+                f.write(f"{key}={val}\n")
+
+# Global settings instance
+settings = Settings()
