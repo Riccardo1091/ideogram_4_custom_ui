@@ -109,7 +109,7 @@ class Int8FastRuntime(BaseRuntime):
         logger.info("Initializing Custom INT8 Fast Runtime (ComfyUI Core / OTUNetLoaderW8A8 mode)...")
         
         # Dynamically locate ComfyUI directory
-        comfyui_path = os.getenv("COMFYUI_PATH")
+        comfyui_path = str(settings.comfyui_path) if settings.comfyui_path else os.getenv("COMFYUI_PATH")
         if not comfyui_path:
             models_path = Path(settings.models_path).absolute()
             # Search upwards for 'ComfyUI' or 'models' directory to find the base ComfyUI directory

@@ -20,6 +20,7 @@ from backend.engine.diagnostics import Diagnostics
 from backend.engine.output_store import OutputStore
 from backend.engine.int8_fast_runtime import Int8FastRuntime
 from backend.engine.official_runtime import OfficialRuntime
+from backend.engine.installer import ComfyUIInstaller
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s - %(message)s")
 logger = logging.getLogger("BackendAPI")
@@ -85,7 +86,8 @@ def get_settings():
         "vae": str(settings.vae),
         "device": settings.device,
         "output_path": str(settings.output_path),
-        "port": settings.port
+        "port": settings.port,
+        "comfyui_path": str(settings.comfyui_path) if settings.comfyui_path else ""
     }
 
 @app.post("/api/settings")
@@ -129,8 +131,48 @@ def get_config():
         "vae": settings.vae,
         "device": settings.device,
         "output_path": str(settings.output_path),
-        "active_engine": engine.name
+        "active_engine": engine.name,
+        "comfyui_path": str(settings.comfyui_path) if settings.comfyui_path else ""
     }
+
+@app.get("/api/comfy/status")
+def get_comfy_status():
+    """Returns the current status of the ComfyUI installation."""
+    try:
+        return ComfyUIInstaller.get_status()
+    except Exception as e:
+        logger.error(f"Error checking comfy status: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/comfy/install")
+def post_comfy_install():
+    """Triggers background automated installation of ComfyUI core & nodes."""
+    try:
+        success, msg = ComfyUIInstaller.start_install()
+        return {"success": success, "message": msg}
+    except Exception as e:
+        logger.error(f"Error initiating comfy install: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/comfy/update")
+def post_comfy_update():
+    """Triggers background automated updates via git or zip overlays."""
+    try:
+        success, msg = ComfyUIInstaller.start_update()
+        return {"success": success, "message": msg}
+    except Exception as e:
+        logger.error(f"Error initiating comfy update: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/comfy/check-updates")
+def post_comfy_check_updates():
+    """Queries remote repositories to see if any updates are available."""
+    try:
+        available, msg = ComfyUIInstaller.check_updates()
+        return {"update_available": available, "message": msg}
+    except Exception as e:
+        logger.error(f"Error checking for updates: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/generate", response_model=GenerationResult)
 def post_generate(request: GenerationRequest):

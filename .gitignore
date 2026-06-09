@@ -1,13 +1,21 @@
-# Environments
+# -------------------------------------------------------
+#  Environments & Runtime
+# -------------------------------------------------------
+comfy_core/
 venv/
 .venv/
 env/
 .env
 
-# Output Directories
+# -------------------------------------------------------
+#  Output / Generated Files
+# -------------------------------------------------------
 outputs/
+*.log
 
-# Python Cache
+# -------------------------------------------------------
+#  Python Cache & Build Artifacts
+# -------------------------------------------------------
 __pycache__/
 *.pyc
 *.pyo
@@ -31,17 +39,42 @@ share/python-wheels/
 *.egg
 MANIFEST
 
-# VSCode / IDE
+# -------------------------------------------------------
+#  IDE & Editor
+# -------------------------------------------------------
 .vscode/
 .idea/
 *.swp
 *.swo
+*.sublime-project
+*.sublime-workspace
 
-# Scratch and Tests
+# -------------------------------------------------------
+#  Tool / Agent Directories
+# -------------------------------------------------------
+.playwright-mcp/
+.gemini/
+.cursor/
+
+# -------------------------------------------------------
+#  Scratch / Temp Files
+# -------------------------------------------------------
 scratch_test.py
 scratch_output.png
-*.log
+*.tmp
+*.bak
 
-# Windows
+# -------------------------------------------------------
+#  Windows
+# -------------------------------------------------------
 Thumbs.db
 Desktop.ini
+ehthumbs.db
+$RECYCLE.BIN/
+
+# -------------------------------------------------------
+#  macOS (se il progetto viene usato su Mac)
+# -------------------------------------------------------
+.DS_Store
+.AppleDouble
+.LSOverride

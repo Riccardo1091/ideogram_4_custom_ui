@@ -639,6 +639,11 @@
             color: #ffffff;
         }
 
+        .wizard-step-content {
+            flex-direction: column;
+            gap: 0.85rem;
+        }
+
         .wizard-step-content h3 {
             font-family: var(--font-display);
             font-size: 1.1rem;
@@ -965,19 +970,56 @@
             </div>
             
             <div class="wizard-steps-indicator">
-                <div class="step-dot active" id="stepIndicator1">1. ComfyUI Path</div>
+                <div class="step-dot active" id="stepIndicator1">1. Core Engine</div>
                 <div class="step-dot" id="stepIndicator2">2. Models & Weights</div>
                 <div class="step-dot" id="stepIndicator3">3. Test Run</div>
             </div>
 
             <!-- Step 1 Content -->
             <div class="wizard-step-content" id="wizardStep1">
-                <h3>Step 1: Locate ComfyUI Core</h3>
-                <p>Enter the main path where ComfyUI is installed. If you haven't installed ComfyUI yet, clone it from the official repository: <a href="https://github.com/Comfy-Org/ComfyUI" target="_blank" style="color: var(--accent-teal);">github.com/Comfy-Org/ComfyUI</a></p>
-                <div class="input-group" style="margin-top: 1.5rem;">
-                    <label class="input-label">ComfyUI Main Folder</label>
-                    <input type="text" id="wizardComfyPath" placeholder="e.g. C:\Users\Riccardo\Desktop\ComfyUI">
-                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">This folder must contain 'models' and 'custom_nodes' directories.</div>
+                <h3>Step 1: ComfyUI Core Engine</h3>
+                <p>Welcome to Ideogram Studio. To run local GPU generation, we need to locate or download the ComfyUI core engine.</p>
+                
+                <!-- Auto-Install Option -->
+                <div id="comfyAutoInstallContainer" style="background: rgba(45, 212, 191, 0.03); border: 1px solid rgba(45, 212, 191, 0.1); border-radius: 16px; padding: 1.25rem; margin-top: 1rem; margin-bottom: 1rem; display: flex; flex-direction: column; gap: 0.75rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                        <div>
+                            <div style="font-weight: 700; font-size: 0.95rem; color: #fff; display: flex; align-items: center; gap: 0.4rem;">
+                                <span>⚡ Auto-Install Engine (Recommended)</span>
+                                <span id="comfyInstallBadge" class="status-badge" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); font-size: 0.65rem; padding: 0.1rem 0.4rem; border-radius: 9999px;">Checking...</span>
+                            </div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">Downloads ComfyUI & requirements automatically to `./comfy_core`</div>
+                        </div>
+                        <button class="generate-btn" id="comfyInstallBtn" style="width: auto; padding: 0.5rem 1rem; font-size: 0.8rem;" onclick="triggerComfyInstall()">Install Now</button>
+                    </div>
+
+                    <!-- Progress and Logs Area -->
+                    <div id="comfyInstallProgressArea" style="display: none; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem;">
+                        <div style="display: flex; justify-content: space-between; font-size: 0.75rem;">
+                            <span id="comfyInstallStep" style="color: var(--accent-teal); font-weight: 600;">Downloading...</span>
+                            <span id="comfyInstallPct" style="color: #fff;">0%</span>
+                        </div>
+                        <div style="width: 100%; height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; overflow: hidden; position: relative;">
+                            <div id="comfyInstallProgressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, var(--accent-indigo), var(--accent-teal)); transition: width 0.3s ease;"></div>
+                        </div>
+                        <div id="comfyInstallLogs" style="font-family: monospace; font-size: 0.7rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); border-radius: 8px; padding: 0.6rem; max-height: 80px; overflow-y: auto; color: var(--text-muted); line-height: 1.4;">
+                            Ready.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Manual Configuration Toggle -->
+                <div style="margin-bottom: 0.5rem; text-align: right;">
+                    <a href="#" id="toggleManualPathBtn" style="font-size: 0.75rem; color: var(--accent-teal); text-decoration: none;" onclick="toggleManualComfyPath(event)">Or specify manual path (Advanced) ⚙️</a>
+                </div>
+
+                <!-- Manual Path Input Group -->
+                <div id="comfyManualPathContainer" style="display: none; border-top: 1px dashed rgba(255,255,255,0.08); padding-top: 1rem; margin-top: 0.5rem; flex-direction: column; gap: 0.75rem;">
+                    <div class="input-group" style="margin-bottom: 0;">
+                        <label class="input-label">ComfyUI Custom Path</label>
+                        <input type="text" id="wizardComfyPath" placeholder="e.g. C:\Users\Riccardo\Desktop\ComfyUI">
+                    </div>
+                    <p class="input-hint" style="font-size: 0.7rem; color: var(--text-muted);">Points to an existing installation containing 'models' and 'custom_nodes'.</p>
                 </div>
             </div>
 
@@ -1026,7 +1068,7 @@
             <div class="wizard-step-content" id="wizardStep3" style="display: none;">
                 <h3>Step 3: Review Configurations</h3>
                 <p>Confirm the values before reloading the backend settings. A validation check will run on the GPU.</p>
-                <div class="status-summary" id="wizardValidationSummary" style="margin-top: 1rem; background: rgba(0,0,0,0.25); padding: 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); font-size: 0.8rem; line-height: 1.6;">
+                <div class="status-summary" id="wizardValidationSummary" style="margin-top: 1rem; background: rgba(0,0,0,0.25); padding: 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); font-size: 0.8rem; line-height: 1.6; word-break: break-all; overflow-wrap: break-word; overflow: hidden;">
                     <!-- Rendered dynamically -->
                 </div>
             </div>
@@ -1049,6 +1091,33 @@
             </div>
             
             <div style="display: flex; flex-direction: column; gap: 0.85rem; max-height: 60vh; overflow-y: auto; padding-right: 0.5rem; margin-top: 0.5rem;">
+                <!-- ComfyUI Engine Manager Section -->
+                <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; padding: 1.25rem; display: flex; flex-direction: column; gap: 0.75rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                        <div>
+                            <div style="font-weight: 700; font-size: 0.95rem; color: #fff; display: flex; align-items: center; gap: 0.4rem;">
+                                <span>🤖 ComfyUI Core Engine</span>
+                                <span id="settingsComfyStatusBadge" class="status-badge" style="font-size: 0.65rem; padding: 0.1rem 0.4rem; border-radius: 9999px; background: rgba(255,255,255,0.05); color: #fff;">Checking...</span>
+                            </div>
+                            <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.35rem; line-height: 1.4;">
+                                📁 Path: <span id="settingsComfyPathText" style="font-family: monospace; color: #fff; word-break: break-all;">Checking...</span><br>
+                                💻 Version Commit: <span id="settingsComfyCommitText" style="font-family: monospace; color: #fff;">Checking...</span>
+                            </div>
+                        </div>
+                        <button class="aspect-btn" id="settingsComfyUpdateBtn" style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.75rem; white-space: nowrap;" onclick="triggerComfyUpdate()" disabled>Update Engine</button>
+                    </div>
+                    
+                    <div id="settingsComfyProgressArea" style="display: none; flex-direction: column; gap: 0.5rem; margin-top: 0.25rem;">
+                        <div style="display: flex; justify-content: space-between; font-size: 0.75rem;">
+                            <span id="settingsComfyInstallStep" style="color: var(--accent-teal); font-weight: 600;">Updating...</span>
+                            <span id="settingsComfyInstallPct" style="color: #fff;">0%</span>
+                        </div>
+                        <div style="width: 100%; height: 5px; background: rgba(255,255,255,0.05); border-radius: 2.5px; overflow: hidden; position: relative;">
+                            <div id="settingsComfyProgressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, var(--accent-indigo), var(--accent-teal)); transition: width 0.3s ease;"></div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="input-group">
                     <label class="input-label">Models Directory Path</label>
                     <input type="text" id="settingsModelsPath">
@@ -1411,13 +1480,28 @@
             document.getElementById("setupWizardOverlay").style.display = "none";
         }
 
+        let comfyPollInterval = null;
+
+        function toggleManualComfyPath(event) {
+            if (event) event.preventDefault();
+            const container = document.getElementById("comfyManualPathContainer");
+            const toggleBtn = document.getElementById("toggleManualPathBtn");
+            if (container.style.display === "none") {
+                container.style.display = "flex";
+                toggleBtn.textContent = "Hide manual path settings ⚙️";
+            } else {
+                container.style.display = "none";
+                toggleBtn.textContent = "Or specify manual path (Advanced) ⚙️";
+            }
+        }
+
         async function loadSettingsIntoWizard() {
             try {
                 const res = await fetch(`${API_URL}/api/settings`);
                 if (res.ok) {
                     const data = await res.json();
-                    let inferredComfy = "";
-                    if (data.models_path && data.models_path !== ".") {
+                    let inferredComfy = data.comfyui_path || "";
+                    if (!inferredComfy && data.models_path && data.models_path !== ".") {
                         inferredComfy = data.models_path.replace("/models/diffusion_models", "").replace("\\models\\diffusion_models", "");
                     }
                     document.getElementById("wizardComfyPath").value = inferredComfy;
@@ -1427,8 +1511,176 @@
                     document.getElementById("wizardTextEncoder").value = data.text_encoder || "";
                     document.getElementById("wizardVae").value = data.vae || "";
                 }
+                await checkComfyStatus("wizard");
             } catch (e) {
                 console.error("Failed to load settings configuration:", e);
+            }
+        }
+
+        async function checkComfyStatus(mode = "wizard") {
+            try {
+                const res = await fetch(`${API_URL}/api/comfy/status`);
+                if (res.ok) {
+                    const status = await res.json();
+                    updateComfyStatusUI(status, mode);
+                    
+                    if (status.is_installing && !comfyPollInterval) {
+                        startComfyPolling(mode);
+                    }
+                }
+            } catch (e) {
+                console.error("Failed to check ComfyUI engine status:", e);
+            }
+        }
+
+        function updateComfyStatusUI(status, mode) {
+            const isWizard = (mode === "wizard");
+            
+            const badge = document.getElementById(isWizard ? "comfyInstallBadge" : "settingsComfyStatusBadge");
+            const btn = document.getElementById(isWizard ? "comfyInstallBtn" : "settingsComfyUpdateBtn");
+            const progArea = document.getElementById(isWizard ? "comfyInstallProgressArea" : "settingsComfyProgressArea");
+            const progBar = document.getElementById(isWizard ? "comfyInstallProgressBar" : "settingsComfyProgressBar");
+            const stepText = document.getElementById(isWizard ? "comfyInstallStep" : "settingsComfyInstallStep");
+            const pctText = document.getElementById(isWizard ? "comfyInstallPct" : "settingsComfyInstallPct");
+            
+            if (status.installed) {
+                badge.textContent = "Installed";
+                badge.style.background = "rgba(45, 212, 191, 0.1)";
+                badge.style.color = "var(--accent-teal)";
+                badge.style.border = "1px solid rgba(45, 212, 191, 0.2)";
+                
+                if (isWizard) {
+                    btn.textContent = "Installed ✓";
+                    btn.disabled = true;
+                    btn.style.background = "rgba(45, 212, 191, 0.2)";
+                } else {
+                    if (status.local_commit !== "N/A" && status.local_commit !== "ZIP-installed") {
+                        if (status.update_available) {
+                            badge.textContent = "Update Available";
+                            badge.style.background = "rgba(245, 158, 11, 0.1)";
+                            badge.style.color = "#f59e0b";
+                            badge.style.border = "1px solid rgba(245, 158, 11, 0.2)";
+                            btn.disabled = false;
+                        } else {
+                            btn.disabled = true;
+                            btn.textContent = "Up to Date";
+                        }
+                    } else {
+                        btn.disabled = false;
+                        btn.textContent = "Update Engine";
+                    }
+                }
+            } else {
+                badge.textContent = "Not Installed";
+                badge.style.background = "rgba(239, 68, 68, 0.1)";
+                badge.style.color = "#ef4444";
+                badge.style.border = "1px solid rgba(239, 68, 68, 0.2)";
+                
+                if (isWizard) {
+                    btn.textContent = "Install Now";
+                    btn.disabled = status.is_installing;
+                }
+            }
+
+            if (!isWizard) {
+                document.getElementById("settingsComfyPath").value = status.install_path || "";
+                document.getElementById("settingsComfyCommitText").textContent = status.local_commit || "N/A";
+            }
+
+            if (status.is_installing) {
+                progArea.style.display = "flex";
+                btn.disabled = true;
+                
+                const pct = Math.round(status.install_progress * 100);
+                progBar.style.width = `${pct}%`;
+                pctText.textContent = `${pct}%`;
+                stepText.textContent = `${status.install_step}: ${status.status_message}`;
+                
+                if (isWizard) {
+                    const logs = document.getElementById("comfyInstallLogs");
+                    if (logs) {
+                        logs.textContent = `[${status.install_step}] ${status.status_message}`;
+                    }
+                }
+            } else {
+                progArea.style.display = "none";
+                
+                if (comfyPollInterval) {
+                    clearInterval(comfyPollInterval);
+                    comfyPollInterval = null;
+                    
+                    if (isWizard && status.installed) {
+                        loadSettingsIntoWizard();
+                    } else if (!isWizard) {
+                        // Refresh settings modal fields
+                        document.getElementById("settingsComfyPath").value = status.install_path || "";
+                        document.getElementById("settingsModelsPath").value = `${status.install_path}/models/diffusion_models`;
+                        document.getElementById("settingsTextEncoder").value = `${status.install_path}/models/text_encoders/qwen3vl_8b_fp8_scaled.safetensors`;
+                        document.getElementById("settingsVae").value = `${status.install_path}/models/vae/flux2-vae.safetensors`;
+                    }
+                }
+            }
+        }
+
+        function startComfyPolling(mode) {
+            if (comfyPollInterval) clearInterval(comfyPollInterval);
+            comfyPollInterval = setInterval(() => checkComfyStatus(mode), 1000);
+        }
+
+        async function triggerComfyInstall() {
+            try {
+                const res = await fetch(`${API_URL}/api/comfy/install`, { method: "POST" });
+                if (res.ok) {
+                    const logs = document.getElementById("comfyInstallLogs");
+                    logs.textContent = "Starting installation task...";
+                    document.getElementById("comfyInstallProgressArea").style.display = "flex";
+                    document.getElementById("comfyInstallBtn").disabled = true;
+                    startComfyPolling("wizard");
+                } else {
+                    alert("Failed to start ComfyUI installation.");
+                }
+            } catch (e) {
+                alert(`Error: ${e.message}`);
+            }
+        }
+
+        async function triggerComfyUpdate() {
+            try {
+                const res = await fetch(`${API_URL}/api/comfy/update`, { method: "POST" });
+                if (res.ok) {
+                    document.getElementById("settingsComfyProgressArea").style.display = "flex";
+                    document.getElementById("settingsComfyUpdateBtn").disabled = true;
+                    startComfyPolling("settings");
+                } else {
+                    alert("Failed to start ComfyUI update.");
+                }
+            } catch (e) {
+                alert(`Error: ${e.message}`);
+            }
+        }
+
+        async function checkComfyRemoteUpdates() {
+            try {
+                const res = await fetch(`${API_URL}/api/comfy/check-updates`, { method: "POST" });
+                if (res.ok) {
+                    const data = await res.json();
+                    const badge = document.getElementById("settingsComfyStatusBadge");
+                    const btn = document.getElementById("settingsComfyUpdateBtn");
+                    
+                    if (data.update_available) {
+                        badge.textContent = "Update Available";
+                        badge.style.background = "rgba(245, 158, 11, 0.1)";
+                        badge.style.color = "#f59e0b";
+                        badge.style.border = "1px solid rgba(245, 158, 11, 0.2)";
+                        btn.disabled = false;
+                        btn.textContent = "Update Engine";
+                    } else {
+                        btn.disabled = true;
+                        btn.textContent = "Up to Date";
+                    }
+                }
+            } catch (e) {
+                console.error("Failed to check remote updates:", e);
             }
         }
 
@@ -1491,15 +1743,18 @@
             const clip = document.getElementById("wizardTextEncoder").value;
             const vae = document.getElementById("wizardVae").value;
 
+            const pathStyle = `font-family: monospace; color: #fff; display: block; word-break: break-all; overflow-wrap: break-word; margin-top: 0.1rem; margin-bottom: 0.4rem; font-size: 0.75rem; opacity: 0.85;`;
+            const rowStyle = `margin-bottom: 0.15rem; color: var(--text-muted);`;
+
             const summaryDiv = document.getElementById("wizardValidationSummary");
             summaryDiv.innerHTML = `
-                <div style="margin-bottom: 0.5rem; font-weight: 700; color: var(--accent-teal);">Configuration Summary:</div>
-                <div>📁 Models Path: <span style="font-family: monospace; color: #fff;">${diffusion}</span></div>
-                <div>📄 Conditional UNet: <span style="font-family: monospace; color: #fff;">${main}</span></div>
-                <div>📄 Unconditional UNet: <span style="font-family: monospace; color: #fff;">${uncond}</span></div>
-                <div>📄 Text Encoder: <span style="font-family: monospace; color: #fff;">${clip}</span></div>
-                <div>📄 VAE Path: <span style="font-family: monospace; color: #fff;">${vae}</span></div>
-                <div style="margin-top: 0.75rem; font-size: 0.75rem; color: var(--text-muted);">Clicking 'Save & Start' will write to .env and trigger hardware warmup verification.</div>
+                <div style="margin-bottom: 0.75rem; font-weight: 700; color: var(--accent-teal); font-size: 0.85rem;">Configuration Summary</div>
+                <div style="${rowStyle}">📁 <strong>Models Path</strong><span style="${pathStyle}">${diffusion}</span></div>
+                <div style="${rowStyle}">📄 <strong>Conditional UNet</strong><span style="${pathStyle}">${main}</span></div>
+                <div style="${rowStyle}">📄 <strong>Unconditional UNet</strong><span style="${pathStyle}">${uncond}</span></div>
+                <div style="${rowStyle}">📄 <strong>Text Encoder</strong><span style="${pathStyle}">${clip}</span></div>
+                <div style="${rowStyle}">📄 <strong>VAE</strong><span style="${pathStyle}">${vae}</span></div>
+                <div style="margin-top: 0.75rem; font-size: 0.72rem; color: var(--text-muted); border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.5rem;">Clicking 'Save & Start' will write to .env and trigger hardware warmup verification.</div>
             `;
         }
 
@@ -1514,7 +1769,8 @@
                     main_model: document.getElementById("wizardMainModel").value.trim(),
                     uncond_model: document.getElementById("wizardUncondModel").value.trim(),
                     text_encoder: document.getElementById("wizardTextEncoder").value.trim(),
-                    vae: document.getElementById("wizardVae").value.trim()
+                    vae: document.getElementById("wizardVae").value.trim(),
+                    comfyui_path: document.getElementById("wizardComfyPath").value.trim()
                 };
 
                 const saveRes = await fetch(`${API_URL}/api/settings`, {
@@ -1563,6 +1819,9 @@
                     document.getElementById("settingsPort").value = data.port || 8000;
                     
                     document.getElementById("settingsModal").style.display = "flex";
+                    
+                    await checkComfyStatus("settings");
+                    checkComfyRemoteUpdates();
                 }
             } catch (e) {
                 alert(`Failed to load configurations: ${e.message}`);
@@ -1588,7 +1847,8 @@
                     vae: document.getElementById("settingsVae").value.trim(),
                     output_path: document.getElementById("settingsOutputPath").value.trim(),
                     device: document.getElementById("settingsDevice").value.trim(),
-                    port: parseInt(document.getElementById("settingsPort").value)
+                    port: parseInt(document.getElementById("settingsPort").value),
+                    comfyui_path: document.getElementById("settingsComfyPath").value.trim()
                 };
 
                 const saveRes = await fetch(`${API_URL}/api/settings`, {

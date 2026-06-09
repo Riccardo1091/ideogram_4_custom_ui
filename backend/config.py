@@ -6,6 +6,7 @@ import os
 from dataclasses import dataclass, field
 from pathlib import Path
 from dotenv import load_dotenv
+from typing import Optional
 
 load_dotenv()
 
@@ -19,6 +20,7 @@ class Settings:
     vae: str = field(default_factory=lambda: os.getenv("IDEOGRAM_VAE", "flux_vae.safetensors"))
     device: str = field(default_factory=lambda: os.getenv("IDEOGRAM_DEVICE", "cuda"))
     output_path: Path = field(default_factory=lambda: Path(os.getenv("IDEOGRAM_OUTPUT_PATH", "./outputs")).absolute())
+    comfyui_path: Optional[Path] = field(default_factory=lambda: Path(os.getenv("COMFYUI_PATH")).absolute() if os.getenv("COMFYUI_PATH") else None)
 
     def __post_init__(self):
         # Auto-create output directory
@@ -60,6 +62,8 @@ class Settings:
                 pass
         if "device" in data and data["device"]:
             self.device = data["device"]
+        if "comfyui_path" in data:
+            self.comfyui_path = Path(data["comfyui_path"]).absolute() if data["comfyui_path"] else None
 
         # Write out to .env file
         env_path = Path(".env")
@@ -73,6 +77,9 @@ class Settings:
             "IDEOGRAM_DEVICE": self.device,
             "IDEOGRAM_OUTPUT_PATH": str(self.output_path).replace("\\", "/"),
         }
+        if self.comfyui_path:
+            mapping["COMFYUI_PATH"] = str(self.comfyui_path).replace("\\", "/")
+            
         with open(env_path, "w", encoding="utf-8") as f:
             f.write("# Ideogram 4 Local App Configurations\n")
             for key, val in mapping.items():

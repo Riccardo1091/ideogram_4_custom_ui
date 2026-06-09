@@ -65,3 +65,4 @@ class SettingsUpdateRequest(BaseModel):
     vae: Optional[str] = None
     output_path: Optional[str] = None
     device: Optional[str] = None
+    comfyui_path: Optional[str] = None
