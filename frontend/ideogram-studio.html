@@ -781,6 +781,61 @@
       ::-webkit-scrollbar-thumb:hover {
         background: var(--accent-teal);
       }
+
+      .open-outputs-btn {
+        position: absolute;
+        bottom: 1.25rem;
+        right: 1.25rem;
+        background: rgba(10, 11, 16, 0.65);
+        backdrop-filter: var(--glass-blur);
+        border: 1px solid rgba(45, 212, 191, 0.2);
+        color: #ffffff;
+        padding: 0.55rem 1.1rem;
+        border-radius: 12px;
+        font-family: var(--font-body);
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        z-index: 60;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+      }
+
+      .open-outputs-btn:hover {
+        background: rgba(45, 212, 191, 0.15);
+        border-color: var(--accent-teal);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(45, 212, 191, 0.25);
+        color: var(--accent-teal);
+      }
+
+      .open-outputs-btn:active {
+        transform: translateY(0);
+      }
+
+      .history-action-btn {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        color: var(--text-muted);
+        padding: 0.35rem 0.8rem;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+      }
+
+      .history-action-btn:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: var(--accent-teal);
+        color: #ffffff;
+      }
     </style>
   </head>
   <body>
@@ -947,13 +1002,21 @@
           </div>
 
           <img src="" alt="Output Image" class="preview-image" id="previewImg" />
+          <button class="open-outputs-btn" id="openOutputsBtn" onclick="openOutputsFolder()" title="Open outputs folder" style="display: none">
+            📂 Open Folder
+          </button>
         </div>
 
         <!-- History grid -->
         <div class="history-section">
           <div class="history-header">
             <span>Recent Generations</span>
-            <span style="font-size: 0.75rem; color: var(--text-muted)" id="historyCount">0 Jobs</span>
+            <div style="display: flex; align-items: center; gap: 0.75rem">
+              <button class="history-action-btn" onclick="openOutputsFolder()" title="Open outputs folder">
+                📂 Open Folder
+              </button>
+              <span style="font-size: 0.75rem; color: var(--text-muted)" id="historyCount">0 Jobs</span>
+            </div>
           </div>
           <div class="history-grid" id="historyGrid">
             <!-- History cards rendered dynamically -->
@@ -1733,17 +1796,20 @@
           if (data.success) {
             previewImg.src = `${API_URL}${data.image_url}`;
             previewImg.classList.add("loaded");
+            document.getElementById("openOutputsBtn").style.display = "flex";
             document.getElementById("seedInput").value = data.seed;
             fetchHistory();
           } else {
             alert(`Generation failed: ${data.error || "Unknown runtime error"}`);
             placeholder.style.display = "flex";
+            document.getElementById("openOutputsBtn").style.display = "none";
           }
         } catch (err) {
           clearInterval(progressInterval);
           progressOverlay.style.display = "none";
           alert(`Error executing task: ${err.message}`);
           placeholder.style.display = "flex";
+          document.getElementById("openOutputsBtn").style.display = "none";
         } finally {
           isGenerating = false;
           button.disabled = false;
@@ -1762,7 +1828,10 @@
           const grid = document.getElementById("historyGrid");
           grid.innerHTML = "";
 
-          history.forEach((item) => {
+          // Show only the last 5 generated images as preview in the UI
+          const recentHistory = history.slice(0, 5);
+
+          recentHistory.forEach((item) => {
             const card = document.createElement("div");
             card.className = "history-card";
             card.title = `Prompt: ${item.prompt.substring(0, 100)}...`;
@@ -1788,6 +1857,7 @@
 
         previewImg.src = `${API_URL}${item.image_url}`;
         previewImg.classList.add("loaded");
+        document.getElementById("openOutputsBtn").style.display = "flex";
 
         document.getElementById("promptInput").value = item.prompt;
         setPromptMode(item.metadata.json_mode ? "json" : "plain");
@@ -1796,6 +1866,20 @@
         document.getElementById("widthInput").value = item.width;
         document.getElementById("heightInput").value = item.height;
         document.getElementById("seedInput").value = item.seed;
+      }
+
+      async function openOutputsFolder() {
+        try {
+          const res = await fetch(`${API_URL}/api/open-outputs`, {
+            method: "POST",
+          });
+          if (!res.ok) {
+            const errData = await res.json();
+            throw new Error(errData.detail || "Failed to open outputs folder");
+          }
+        } catch (err) {
+          alert(`Error opening outputs folder: ${err.message}`);
+        }
       }
 
       // =====================================================================

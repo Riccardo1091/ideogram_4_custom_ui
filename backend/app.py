@@ -241,6 +241,20 @@ def post_generate(request: GenerationRequest):
         logger.error(f"Generation job failed: {e}")
         raise HTTPException(status_code=500, detail=f"Generation failed: {str(e)}")
 
+@app.post("/api/open-outputs")
+def open_outputs():
+    """Opens the output directory in the native file explorer."""
+    try:
+        import os
+        path = os.path.abspath(settings.output_path)
+        if not os.path.exists(path):
+            os.makedirs(path, exist_ok=True)
+        os.startfile(path)
+        return {"success": True}
+    except Exception as e:
+        logger.error(f"Error opening output folder: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.get("/api/history", response_model=List[HistoryItem])
 def get_history():
     """Returns past generation records."""
@@ -254,6 +268,14 @@ def get_history():
 def get_image(job_id: str, file_name: str):
     """Serves generated PNG output images."""
     target_path = Path(settings.output_path) / job_id / file_name
+    if not target_path.exists():
+        raise HTTPException(status_code=404, detail="Requested file not found.")
+    return FileResponse(target_path)
+
+@app.get("/api/image/{file_name}")
+def get_flat_image(file_name: str):
+    """Serves generated PNG output images directly from the outputs folder."""
+    target_path = Path(settings.output_path) / file_name
     if not target_path.exists():
         raise HTTPException(status_code=404, detail="Requested file not found.")
     return FileResponse(target_path)

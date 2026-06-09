@@ -23,17 +23,11 @@ class OutputStore:
         metadata: dict,
         success: bool = True
     ) -> HistoryItem:
-        """Saves image and metadata into a job directory and returns a HistoryItem."""
+        """Saves image directly into the outputs directory with embedded PNG metadata."""
+        from PIL import PngImagePlugin
+        
         job_id = str(uuid.uuid4())
         timestamp = datetime.datetime.now().isoformat()
-        
-        job_dir = Path(settings.output_path) / job_id
-        job_dir.mkdir(parents=True, exist_ok=True)
-        
-        # Save image
-        image_name = "output.png"
-        image_path = job_dir / image_name
-        image.save(image_path, "PNG")
         
         # Build metadata dictionary
         meta_dict = {
@@ -48,13 +42,30 @@ class OutputStore:
             "details": metadata
         }
         
-        # Save JSON metadata
-        meta_path = job_dir / "metadata.json"
-        with open(meta_path, "w", encoding="utf-8") as f:
-            json.dump(meta_dict, f, indent=2, ensure_ascii=False)
+        # Create PNG metadata
+        png_info = PngImagePlugin.PngInfo()
+        png_info.add_text("ideogram_metadata", json.dumps(meta_dict))
+        
+        # Generate filename based on timestamp and seed
+        timestamp_str = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        image_name = f"{timestamp_str}_{seed}.png"
+        
+        # Ensure unique name in output folder
+        output_dir = Path(settings.output_path)
+        output_dir.mkdir(parents=True, exist_ok=True)
+        
+        image_path = output_dir / image_name
+        counter = 1
+        while image_path.exists():
+            image_name = f"{timestamp_str}_{seed}_{counter}.png"
+            image_path = output_dir / image_name
+            counter += 1
             
+        # Save image directly in outputs folder with info embedded
+        image.save(image_path, "PNG", pnginfo=png_info)
+        
         # Image URL to serve via API
-        image_url = f"/api/image/{job_id}/{image_name}"
+        image_url = f"/api/image/{image_name}"
         
         return HistoryItem(
             job_id=job_id,
@@ -77,9 +88,49 @@ class OutputStore:
         if not outputs_dir.exists():
             return history
             
-        for job_dir in outputs_dir.iterdir():
-            if job_dir.is_dir():
-                meta_path = job_dir / "metadata.json"
+        # Iterate over output directory
+        for item in outputs_dir.iterdir():
+            if item.is_file() and item.suffix.lower() == ".png":
+                # Check for metadata embedded in PNG
+                try:
+                    with Image.open(item) as img:
+                        metadata_str = img.info.get("ideogram_metadata")
+                        if metadata_str:
+                            meta = json.loads(metadata_str)
+                            history.append(HistoryItem(
+                                job_id=meta.get("job_id"),
+                                timestamp=meta.get("timestamp"),
+                                prompt=meta.get("prompt"),
+                                preset=meta.get("preset"),
+                                width=meta.get("width"),
+                                height=meta.get("height"),
+                                seed=meta.get("seed"),
+                                success=meta.get("success", True),
+                                image_url=f"/api/image/{item.name}",
+                                metadata=meta
+                            ))
+                        else:
+                            # PNG file with no embedded metadata (e.g. user-placed file)
+                            # Create a fallback HistoryItem based on file properties
+                            stat = item.stat()
+                            mtime = datetime.datetime.fromtimestamp(stat.st_mtime).isoformat()
+                            history.append(HistoryItem(
+                                job_id=item.stem,
+                                timestamp=mtime,
+                                prompt="External Image",
+                                preset="default",
+                                width=img.width,
+                                height=img.height,
+                                seed=0,
+                                success=True,
+                                image_url=f"/api/image/{item.name}",
+                                metadata={}
+                            ))
+                except Exception:
+                    pass
+            elif item.is_dir() and item.name != "__pycache__":
+                # Legacy subdirectory check
+                meta_path = item / "metadata.json"
                 if meta_path.exists():
                     try:
                         with open(meta_path, "r", encoding="utf-8") as f:
