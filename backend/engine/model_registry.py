@@ -3,26 +3,22 @@ Registers and checks the paths of model components needed for Ideogram 4 inferen
 """
 
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict
 from backend.config import settings
 
 class ModelRegistry:
     @staticmethod
-    def resolve_path(base_dir: Path, path_str: str) -> Path:
-        p = Path(path_str)
-        if p.is_absolute():
-            return p
-        return base_dir / p
+    def resolve_path(path_str: str) -> Path:
+        return Path(path_str).absolute()
 
     @staticmethod
     def get_paths() -> Dict[str, Path]:
         """Returns the resolved paths of all required model assets."""
-        models_dir = Path(settings.models_path)
         return {
-            "main_model": ModelRegistry.resolve_path(models_dir, settings.main_model),
-            "uncond_model": ModelRegistry.resolve_path(models_dir, settings.uncond_model),
-            "text_encoder": ModelRegistry.resolve_path(models_dir, settings.text_encoder),
-            "vae": ModelRegistry.resolve_path(models_dir, settings.vae),
+            "main_model": ModelRegistry.resolve_path(settings.main_model),
+            "uncond_model": ModelRegistry.resolve_path(settings.uncond_model),
+            "text_encoder": ModelRegistry.resolve_path(settings.text_encoder),
+            "vae": ModelRegistry.resolve_path(settings.vae),
         }
 
     @staticmethod

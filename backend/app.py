@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import List
 
 from backend.config import settings
-from backend.schemas import GenerationRequest, GenerationResult, HealthStatus, HistoryItem, SettingsUpdateRequest
+from backend.schemas import BrowsePathRequest, GenerationRequest, GenerationResult, HealthStatus, HistoryItem, SettingsUpdateRequest
 from backend.presets import resolve_parameters
 from backend.engine.prompt_builder import PromptBuilder
 from backend.engine.diagnostics import Diagnostics
@@ -79,7 +79,6 @@ def get_progress():
 def get_settings():
     """Exposes all dynamic configuration settings."""
     return {
-        "models_path": str(settings.models_path),
         "main_model": settings.main_model,
         "uncond_model": settings.uncond_model,
         "text_encoder": str(settings.text_encoder),
@@ -120,11 +119,44 @@ def reload_settings():
         logger.error(f"Error reloading engine settings: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.post("/api/browse-path")
+def browse_path(req: BrowsePathRequest):
+    """Opens a native local file/folder picker and returns the selected path."""
+    try:
+        import tkinter as tk
+        from tkinter import filedialog
+
+        root = tk.Tk()
+        root.withdraw()
+        root.attributes("-topmost", True)
+
+        initial_path = req.initial_path or str(Path.home())
+        if req.kind == "directory":
+            selected = filedialog.askdirectory(
+                title=req.title or "Select folder",
+                initialdir=initial_path
+            )
+        else:
+            filetypes = req.filetypes or [["Model files", "*.safetensors"], ["All files", "*.*"]]
+            selected = filedialog.askopenfilename(
+                title=req.title or "Select file",
+                initialdir=initial_path,
+                filetypes=[tuple(item) for item in filetypes]
+            )
+
+        root.destroy()
+        return {
+            "selected": bool(selected),
+            "path": str(Path(selected)).replace("\\", "/") if selected else ""
+        }
+    except Exception as e:
+        logger.error(f"Error opening path picker: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.get("/api/config")
 def get_config():
     """Exposes system setup locations."""
     return {
-        "models_path": str(settings.models_path),
         "main_model": settings.main_model,
         "uncond_model": settings.uncond_model,
         "text_encoder": settings.text_encoder,

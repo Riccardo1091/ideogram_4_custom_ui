@@ -111,19 +111,25 @@ class Int8FastRuntime(BaseRuntime):
         # Dynamically locate ComfyUI directory
         comfyui_path = str(settings.comfyui_path) if settings.comfyui_path else os.getenv("COMFYUI_PATH")
         if not comfyui_path:
-            models_path = Path(settings.models_path).absolute()
-            # Search upwards for 'ComfyUI' or 'models' directory to find the base ComfyUI directory
+            model_paths = list(ModelRegistry.get_paths().values())
             found = False
-            for parent in [models_path] + list(models_path.parents):
-                if parent.name.lower() == "comfyui":
-                    comfyui_path = str(parent)
-                    found = True
+            for model_path in model_paths:
+                for parent in [model_path.parent] + list(model_path.parents):
+                    if parent.name.lower() == "comfyui":
+                        comfyui_path = str(parent)
+                        found = True
+                        break
+                if found:
                     break
             if not found:
-                for parent in [models_path] + list(models_path.parents):
-                    if parent.name.lower() == "models":
+                for model_path in model_paths:
+                    for parent in [model_path.parent] + list(model_path.parents):
+                        if parent.name.lower() != "models":
+                            continue
                         comfyui_path = str(parent.parent)
                         found = True
+                        break
+                    if found:
                         break
             if not found:
                 comfyui_path = r"C:\Users\Riccardo\Desktop\ComfyUI"

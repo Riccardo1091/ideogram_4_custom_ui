@@ -3,7 +3,7 @@ Defines input/output schemas for the local REST API.
 """
 
 from pydantic import BaseModel, Field
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 
 class GenerationRequest(BaseModel):
     prompt: str = Field(..., description="Prompt text or structured JSON prompt as string")
@@ -58,11 +58,17 @@ class HistoryItem(BaseModel):
     metadata: Dict[str, Any]
 
 class SettingsUpdateRequest(BaseModel):
-    models_path: Optional[str] = None
     main_model: Optional[str] = None
     uncond_model: Optional[str] = None
     text_encoder: Optional[str] = None
     vae: Optional[str] = None
     output_path: Optional[str] = None
     device: Optional[str] = None
+    port: Optional[int] = None
     comfyui_path: Optional[str] = None
+
+class BrowsePathRequest(BaseModel):
+    kind: str = Field("file", description="Path selector type: file or directory")
+    title: Optional[str] = None
+    initial_path: Optional[str] = None
+    filetypes: Optional[List[List[str]]] = None

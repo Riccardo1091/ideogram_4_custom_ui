@@ -348,6 +348,25 @@
             border-color: var(--accent-teal);
         }
 
+        .path-picker-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .path-picker-input {
+            cursor: pointer;
+        }
+
+        .path-picker-btn {
+            width: auto;
+            min-width: 78px;
+            height: 34px;
+            padding: 0 0.65rem;
+            white-space: nowrap;
+        }
+
         /* Collapsible Accordion for Advanced Params */
         .accordion-header {
             display: flex;
@@ -1017,7 +1036,10 @@
                 <div id="comfyManualPathContainer" style="display: none; border-top: 1px dashed rgba(255,255,255,0.08); padding-top: 1rem; margin-top: 0.5rem; flex-direction: column; gap: 0.75rem;">
                     <div class="input-group" style="margin-bottom: 0;">
                         <label class="input-label">ComfyUI Custom Path</label>
-                        <input type="text" id="wizardComfyPath" placeholder="e.g. C:\Users\Riccardo\Desktop\ComfyUI">
+                        <div class="path-picker-row">
+                            <input type="text" id="wizardComfyPath" class="path-picker-input" placeholder="e.g. C:\Users\Riccardo\Desktop\ComfyUI" readonly data-picker-kind="directory" data-picker-title="Select ComfyUI folder">
+                            <button class="aspect-btn path-picker-btn" type="button" onclick="browseForPath('wizardComfyPath')">Browse</button>
+                        </div>
                     </div>
                     <p class="input-hint" style="font-size: 0.7rem; color: var(--text-muted);">Points to an existing installation containing 'models' and 'custom_nodes'.</p>
                 </div>
@@ -1025,39 +1047,47 @@
 
             <!-- Step 2 Content -->
             <div class="wizard-step-content" id="wizardStep2" style="display: none;">
-                <h3>Step 2: Checkpoint Folders</h3>
-                <p>Set the locations of your diffusion models, VAE, and text encoder safetensors files. If you do not have them downloaded, click the download links below:</p>
-                
-                <div class="input-group" style="margin-top: 0.75rem;">
-                    <label class="input-label">Diffusion Models Folder</label>
-                    <input type="text" id="wizardDiffusionPath">
-                </div>
+                <h3>Step 2: Model Files</h3>
+                <p>Select the four safetensors files required by Ideogram: the two UNets, the text encoder, and the VAE.</p>
+
                 <div class="param-row" style="margin-top: 0.75rem;">
                     <div class="input-group">
-                        <label class="input-label">Main Conditional UNet</label>
-                        <input type="text" id="wizardMainModel" value="ideogram4-int8-ConvRot.safetensors">
+                        <label class="input-label">Conditional UNet</label>
+                        <div class="path-picker-row">
+                            <input type="text" id="wizardMainModel" class="path-picker-input" readonly data-picker-kind="file" data-picker-title="Select conditional UNet file" data-picker-filter="safetensors">
+                            <button class="aspect-btn path-picker-btn" type="button" onclick="browseForPath('wizardMainModel')">Browse</button>
+                        </div>
                         <div style="font-size: 0.7rem; margin-top: 0.15rem;">
                             <a href="https://huggingface.co/bertbobson/Ideogram-4-INT8-ConvRot/resolve/main/ideogram4-int8-ConvRot.safetensors?download=true" target="_blank" style="color: var(--accent-teal); text-decoration: none;">Download Conditional UNet 📥</a>
                         </div>
                     </div>
                     <div class="input-group">
                         <label class="input-label">Unconditional UNet</label>
-                        <input type="text" id="wizardUncondModel" value="ideogram4-unconditional-int8-ConvRot.safetensors">
+                        <div class="path-picker-row">
+                            <input type="text" id="wizardUncondModel" class="path-picker-input" value="ideogram4-unconditional-int8-ConvRot.safetensors" readonly data-picker-kind="file" data-picker-title="Select unconditional UNet file" data-picker-filter="safetensors">
+                            <button class="aspect-btn path-picker-btn" type="button" onclick="browseForPath('wizardUncondModel')">Browse</button>
+                        </div>
                         <div style="font-size: 0.7rem; margin-top: 0.15rem;">
                             <a href="https://huggingface.co/bertbobson/Ideogram-4-INT8-ConvRot/resolve/main/ideogram4-unconditional-int8-ConvRot.safetensors?download=true" target="_blank" style="color: var(--accent-teal); text-decoration: none;">Download Unconditional UNet 📥</a>
                         </div>
                     </div>
                 </div>
                 <div class="input-group" style="margin-top: 0.75rem;">
-                    <label class="input-label">Text Encoder (Qwen-3VL FP8) Path</label>
-                    <input type="text" id="wizardTextEncoder">
+                    <label class="input-label">Text Encoder</label>
+                    <div class="path-picker-row">
+                        <input type="text" id="wizardTextEncoder" class="path-picker-input" readonly data-picker-kind="file" data-picker-title="Select text encoder file" data-picker-filter="safetensors">
+                        <button class="aspect-btn path-picker-btn" type="button" onclick="browseForPath('wizardTextEncoder')">Browse</button>
+                    </div>
                     <div style="font-size: 0.7rem; margin-top: 0.15rem;">
                         <a href="https://huggingface.co/Comfy-Org/Ideogram-4/resolve/main/text_encoders/qwen3vl_8b_fp8_scaled.safetensors?download=true" target="_blank" style="color: var(--accent-teal); text-decoration: none;">Download Text Encoder (Qwen-3VL FP8) 📥</a>
                     </div>
                 </div>
                 <div class="input-group" style="margin-top: 0.75rem;">
-                    <label class="input-label">VAE Path</label>
-                    <input type="text" id="wizardVae">
+                    <label class="input-label">VAE</label>
+                    <div class="path-picker-row">
+                        <input type="text" id="wizardVae" class="path-picker-input" readonly data-picker-kind="file" data-picker-title="Select VAE file" data-picker-filter="safetensors">
+                        <button class="aspect-btn path-picker-btn" type="button" onclick="browseForPath('wizardVae')">Browse</button>
+                    </div>
                     <div style="font-size: 0.7rem; margin-top: 0.15rem;">
                         <a href="https://huggingface.co/Comfy-Org/flux2-dev/resolve/main/split_files/vae/flux2-vae.safetensors?download=true" target="_blank" style="color: var(--accent-teal); text-decoration: none;">Download Flux VAE 📥</a>
                     </div>
@@ -1116,45 +1146,63 @@
                             <div id="settingsComfyProgressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, var(--accent-indigo), var(--accent-teal)); transition: width 0.3s ease;"></div>
                         </div>
                     </div>
+                    <div class="input-group">
+                        <label class="input-label">ComfyUI Custom Path</label>
+                        <div class="path-picker-row">
+                            <input type="text" id="settingsComfyPath" class="path-picker-input" readonly data-picker-kind="directory" data-picker-title="Select ComfyUI folder">
+                            <button class="aspect-btn path-picker-btn" type="button" onclick="browseForPath('settingsComfyPath')">Browse</button>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="input-group">
-                    <label class="input-label">Models Directory Path</label>
-                    <input type="text" id="settingsModelsPath">
-                </div>
                 <div class="param-row">
                     <div class="input-group">
-                        <label class="input-label">Main Conditional UNet</label>
-                        <input type="text" id="settingsMainModel">
+                        <label class="input-label">Conditional UNet</label>
+                        <div class="path-picker-row">
+                            <input type="text" id="settingsMainModel" class="path-picker-input" readonly data-picker-kind="file" data-picker-title="Select conditional UNet file" data-picker-filter="safetensors">
+                            <button class="aspect-btn path-picker-btn" type="button" onclick="browseForPath('settingsMainModel')">Browse</button>
+                        </div>
                         <div style="font-size: 0.7rem; margin-top: 0.15rem;">
                             <a href="https://huggingface.co/bertbobson/Ideogram-4-INT8-ConvRot/resolve/main/ideogram4-int8-ConvRot.safetensors?download=true" target="_blank" style="color: var(--accent-teal); text-decoration: none;">Download Conditional UNet 📥</a>
                         </div>
                     </div>
                     <div class="input-group">
                         <label class="input-label">Unconditional UNet</label>
-                        <input type="text" id="settingsUncondModel">
+                        <div class="path-picker-row">
+                            <input type="text" id="settingsUncondModel" class="path-picker-input" readonly data-picker-kind="file" data-picker-title="Select unconditional UNet file" data-picker-filter="safetensors">
+                            <button class="aspect-btn path-picker-btn" type="button" onclick="browseForPath('settingsUncondModel')">Browse</button>
+                        </div>
                         <div style="font-size: 0.7rem; margin-top: 0.15rem;">
                             <a href="https://huggingface.co/bertbobson/Ideogram-4-INT8-ConvRot/resolve/main/ideogram4-unconditional-int8-ConvRot.safetensors?download=true" target="_blank" style="color: var(--accent-teal); text-decoration: none;">Download Unconditional UNet 📥</a>
                         </div>
                     </div>
                 </div>
                 <div class="input-group">
-                    <label class="input-label">Text Encoder (Qwen-3VL FP8) Path</label>
-                    <input type="text" id="settingsTextEncoder">
+                    <label class="input-label">Text Encoder</label>
+                    <div class="path-picker-row">
+                        <input type="text" id="settingsTextEncoder" class="path-picker-input" readonly data-picker-kind="file" data-picker-title="Select text encoder file" data-picker-filter="safetensors">
+                        <button class="aspect-btn path-picker-btn" type="button" onclick="browseForPath('settingsTextEncoder')">Browse</button>
+                    </div>
                     <div style="font-size: 0.7rem; margin-top: 0.15rem;">
                         <a href="https://huggingface.co/Comfy-Org/Ideogram-4/resolve/main/text_encoders/qwen3vl_8b_fp8_scaled.safetensors?download=true" target="_blank" style="color: var(--accent-teal); text-decoration: none;">Download Text Encoder (Qwen-3VL FP8) 📥</a>
                     </div>
                 </div>
                 <div class="input-group">
-                    <label class="input-label">VAE Path</label>
-                    <input type="text" id="settingsVae">
+                    <label class="input-label">VAE</label>
+                    <div class="path-picker-row">
+                        <input type="text" id="settingsVae" class="path-picker-input" readonly data-picker-kind="file" data-picker-title="Select VAE file" data-picker-filter="safetensors">
+                        <button class="aspect-btn path-picker-btn" type="button" onclick="browseForPath('settingsVae')">Browse</button>
+                    </div>
                     <div style="font-size: 0.7rem; margin-top: 0.15rem;">
                         <a href="https://huggingface.co/Comfy-Org/flux2-dev/resolve/main/split_files/vae/flux2-vae.safetensors?download=true" target="_blank" style="color: var(--accent-teal); text-decoration: none;">Download Flux VAE 📥</a>
                     </div>
                 </div>
                 <div class="input-group">
                     <label class="input-label">Output Directory Path</label>
-                    <input type="text" id="settingsOutputPath">
+                    <div class="path-picker-row">
+                        <input type="text" id="settingsOutputPath" class="path-picker-input" readonly data-picker-kind="directory" data-picker-title="Select output directory">
+                        <button class="aspect-btn path-picker-btn" type="button" onclick="browseForPath('settingsOutputPath')">Browse</button>
+                    </div>
                 </div>
                 <div class="param-row">
                     <div class="input-group">
@@ -1209,10 +1257,88 @@
         document.addEventListener("DOMContentLoaded", () => {
             checkBackendHealth();
             fetchHistory();
+            setupPathPickerInputs();
             
             // Periodically check connection status
             setInterval(checkBackendHealth, 5000);
         });
+
+        function setupPathPickerInputs() {
+            document.querySelectorAll(".path-picker-input").forEach((input) => {
+                input.addEventListener("click", () => browseForPath(input.id));
+                input.title = "Click to browse";
+            });
+        }
+
+        function getPathDir(path) {
+            if (!path) return "";
+            const normalized = path.replace(/\\/g, "/");
+            const lastSlash = normalized.lastIndexOf("/");
+            return lastSlash > -1 ? normalized.slice(0, lastSlash) : "";
+        }
+
+        function getPathName(path) {
+            if (!path) return "";
+            const normalized = path.replace(/\\/g, "/");
+            const lastSlash = normalized.lastIndexOf("/");
+            return lastSlash > -1 ? normalized.slice(lastSlash + 1) : normalized;
+        }
+
+        function setComfyModelDefaults(prefix, comfyPath) {
+            const normalizedBase = comfyPath.replace(/\\/g, "/").replace(/\/$/, "");
+            const diffusionPath = `${normalizedBase}/models/diffusion_models`;
+            document.getElementById(prefix === "wizard" ? "wizardMainModel" : "settingsMainModel").value = `${diffusionPath}/ideogram4-int8-ConvRot.safetensors`;
+            document.getElementById(prefix === "wizard" ? "wizardUncondModel" : "settingsUncondModel").value = `${diffusionPath}/ideogram4-unconditional-int8-ConvRot.safetensors`;
+            document.getElementById(prefix === "wizard" ? "wizardTextEncoder" : "settingsTextEncoder").value = `${normalizedBase}/models/text_encoders/qwen3vl_8b_fp8_scaled.safetensors`;
+            document.getElementById(prefix === "wizard" ? "wizardVae" : "settingsVae").value = `${normalizedBase}/models/vae/flux2-vae.safetensors`;
+        }
+
+        function getPickerInitialPath(input) {
+            const currentValue = input.value.trim();
+            if (input.dataset.pickerKind === "directory") return currentValue || "";
+            const currentDir = getPathDir(currentValue);
+            if (currentDir) return currentDir;
+            return "";
+        }
+
+        function applyPickedPathSideEffects(inputId, selectedPath) {
+            const normalized = selectedPath.replace(/\\/g, "/");
+            if (inputId === "wizardComfyPath" || inputId === "settingsComfyPath") {
+                const prefix = inputId.startsWith("wizard") ? "wizard" : "settings";
+                setComfyModelDefaults(prefix, normalized);
+            }
+        }
+
+        async function browseForPath(inputId) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+
+            try {
+                const filetypes = input.dataset.pickerFilter === "safetensors"
+                    ? [["Safetensors models", "*.safetensors"], ["All files", "*.*"]]
+                    : [["All files", "*.*"]];
+
+                const res = await fetch(`${API_URL}/api/browse-path`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        kind: input.dataset.pickerKind || "file",
+                        title: input.dataset.pickerTitle || "Select path",
+                        initial_path: getPickerInitialPath(input),
+                        filetypes
+                    })
+                });
+
+                if (!res.ok) throw new Error("Unable to open the native path picker");
+                const data = await res.json();
+                if (data.selected && data.path) {
+                    input.value = data.path;
+                    applyPickedPathSideEffects(inputId, data.path);
+                }
+            } catch (e) {
+                alert(`Path selection failed: ${e.message}`);
+            }
+        }
 
         async function checkBackendHealth() {
             if (isGenerating) return; // Don't interrupt health checks during generation
@@ -1501,13 +1627,9 @@
                 if (res.ok) {
                     const data = await res.json();
                     let inferredComfy = data.comfyui_path || "";
-                    if (!inferredComfy && data.models_path && data.models_path !== ".") {
-                        inferredComfy = data.models_path.replace("/models/diffusion_models", "").replace("\\models\\diffusion_models", "");
-                    }
                     document.getElementById("wizardComfyPath").value = inferredComfy;
-                    document.getElementById("wizardDiffusionPath").value = data.models_path || "";
-                    document.getElementById("wizardMainModel").value = data.main_model || "ideogram4-int8-ConvRot.safetensors";
-                    document.getElementById("wizardUncondModel").value = data.uncond_model || "ideogram4-unconditional-int8-ConvRot.safetensors";
+                    document.getElementById("wizardMainModel").value = data.main_model || "";
+                    document.getElementById("wizardUncondModel").value = data.uncond_model || "";
                     document.getElementById("wizardTextEncoder").value = data.text_encoder || "";
                     document.getElementById("wizardVae").value = data.vae || "";
                 }
@@ -1584,6 +1706,7 @@
 
             if (!isWizard) {
                 document.getElementById("settingsComfyPath").value = status.install_path || "";
+                document.getElementById("settingsComfyPathText").textContent = status.install_path || "N/A";
                 document.getElementById("settingsComfyCommitText").textContent = status.local_commit || "N/A";
             }
 
@@ -1614,9 +1737,8 @@
                     } else if (!isWizard) {
                         // Refresh settings modal fields
                         document.getElementById("settingsComfyPath").value = status.install_path || "";
-                        document.getElementById("settingsModelsPath").value = `${status.install_path}/models/diffusion_models`;
-                        document.getElementById("settingsTextEncoder").value = `${status.install_path}/models/text_encoders/qwen3vl_8b_fp8_scaled.safetensors`;
-                        document.getElementById("settingsVae").value = `${status.install_path}/models/vae/flux2-vae.safetensors`;
+                        document.getElementById("settingsComfyPathText").textContent = status.install_path || "N/A";
+                        if (status.install_path) setComfyModelDefaults("settings", status.install_path);
                     }
                 }
             }
@@ -1688,10 +1810,7 @@
             if (wizardCurrentStep === 1) {
                 const comfyPath = document.getElementById("wizardComfyPath").value.trim();
                 if (comfyPath) {
-                    const normalized = comfyPath.replace(/\\/g, "/");
-                    document.getElementById("wizardDiffusionPath").value = `${normalized}/models/diffusion_models`;
-                    document.getElementById("wizardTextEncoder").value = `${normalized}/models/text_encoders/qwen3vl_8b_fp8_scaled.safetensors`;
-                    document.getElementById("wizardVae").value = `${normalized}/models/vae/flux2-vae.safetensors`;
+                    setComfyModelDefaults("wizard", comfyPath);
                 }
                 
                 document.getElementById("wizardStep1").style.display = "none";
@@ -1737,7 +1856,6 @@
         }
 
         function renderWizardSummary() {
-            const diffusion = document.getElementById("wizardDiffusionPath").value;
             const main = document.getElementById("wizardMainModel").value;
             const uncond = document.getElementById("wizardUncondModel").value;
             const clip = document.getElementById("wizardTextEncoder").value;
@@ -1749,7 +1867,6 @@
             const summaryDiv = document.getElementById("wizardValidationSummary");
             summaryDiv.innerHTML = `
                 <div style="margin-bottom: 0.75rem; font-weight: 700; color: var(--accent-teal); font-size: 0.85rem;">Configuration Summary</div>
-                <div style="${rowStyle}">📁 <strong>Models Path</strong><span style="${pathStyle}">${diffusion}</span></div>
                 <div style="${rowStyle}">📄 <strong>Conditional UNet</strong><span style="${pathStyle}">${main}</span></div>
                 <div style="${rowStyle}">📄 <strong>Unconditional UNet</strong><span style="${pathStyle}">${uncond}</span></div>
                 <div style="${rowStyle}">📄 <strong>Text Encoder</strong><span style="${pathStyle}">${clip}</span></div>
@@ -1765,7 +1882,6 @@
 
             try {
                 const settingsData = {
-                    models_path: document.getElementById("wizardDiffusionPath").value.trim(),
                     main_model: document.getElementById("wizardMainModel").value.trim(),
                     uncond_model: document.getElementById("wizardUncondModel").value.trim(),
                     text_encoder: document.getElementById("wizardTextEncoder").value.trim(),
@@ -1809,7 +1925,6 @@
                 const res = await fetch(`${API_URL}/api/settings`);
                 if (res.ok) {
                     const data = await res.json();
-                    document.getElementById("settingsModelsPath").value = data.models_path || "";
                     document.getElementById("settingsMainModel").value = data.main_model || "";
                     document.getElementById("settingsUncondModel").value = data.uncond_model || "";
                     document.getElementById("settingsTextEncoder").value = data.text_encoder || "";
@@ -1817,6 +1932,8 @@
                     document.getElementById("settingsOutputPath").value = data.output_path || "";
                     document.getElementById("settingsDevice").value = data.device || "cuda";
                     document.getElementById("settingsPort").value = data.port || 8000;
+                    document.getElementById("settingsComfyPath").value = data.comfyui_path || "";
+                    document.getElementById("settingsComfyPathText").textContent = data.comfyui_path || "N/A";
                     
                     document.getElementById("settingsModal").style.display = "flex";
                     
@@ -1840,7 +1957,6 @@
 
             try {
                 const settingsData = {
-                    models_path: document.getElementById("settingsModelsPath").value.trim(),
                     main_model: document.getElementById("settingsMainModel").value.trim(),
                     uncond_model: document.getElementById("settingsUncondModel").value.trim(),
                     text_encoder: document.getElementById("settingsTextEncoder").value.trim(),

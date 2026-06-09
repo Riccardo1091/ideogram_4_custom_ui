@@ -24,7 +24,8 @@ def run_smoke_test():
     
     # 1. Config Validation
     logger.info("Verifying configuration settings...")
-    logger.info(f"Models folder: {settings.models_path}")
+    for name, path in ModelRegistry.get_paths().items():
+        logger.info(f"{name}: {path}")
     logger.info(f"Output folder: {settings.output_path}")
     
     report = settings.validate()

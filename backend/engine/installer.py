@@ -192,17 +192,15 @@ class ComfyUIInstaller:
             cls._progress = 0.9
 
             settings.comfyui_path = target_path
-            
-            # Ensure base models paths default to our new comfyui core structure
-            settings.models_path = target_path / "models" / "diffusion_models"
-            settings.text_encoder = target_path / "models" / "text_encoders" / "qwen3vl_8b_fp8_scaled.safetensors"
-            settings.vae = target_path / "models" / "vae" / "flux2-vae.safetensors"
+            diffusion_path = target_path / "models" / "diffusion_models"
 
             # Persist back to settings & .env
             settings.update_settings({
-                "models_path": str(settings.models_path),
-                "text_encoder": str(settings.text_encoder),
-                "vae": str(settings.vae)
+                "comfyui_path": str(target_path),
+                "main_model": str(diffusion_path / "ideogram4-int8-ConvRot.safetensors"),
+                "uncond_model": str(diffusion_path / "ideogram4-unconditional-int8-ConvRot.safetensors"),
+                "text_encoder": str(target_path / "models" / "text_encoders" / "qwen3vl_8b_fp8_scaled.safetensors"),
+                "vae": str(target_path / "models" / "vae" / "flux2-vae.safetensors")
             })
 
             cls._progress = 1.0
@@ -240,6 +238,25 @@ class ComfyUIInstaller:
         res_node = subprocess.run(cmd_node, capture_output=True, text=True)
         if res_node.returncode != 0:
             raise RuntimeError(f"Failed to clone ComfyUI-INT8-Fast repository: {res_node.stderr}")
+
+        cls._step = "Installing Dependencies"
+        cls._message = "Installing core & custom nodes requirements..."
+        cls._progress = 0.7
+        venv_pip = Path(__file__).resolve().parent.parent.parent / "venv" / "Scripts" / "pip.exe"
+        if venv_pip.exists():
+            # Install Core Requirements
+            core_reqs = target_path / "requirements.txt"
+            if core_reqs.exists():
+                res_core = subprocess.run([str(venv_pip), "install", "-r", str(core_reqs)], capture_output=True, text=True)
+                if res_core.returncode != 0:
+                    logger.warning(f"Core requirements install warning: {res_core.stderr}")
+            
+            # Install Node Requirements
+            requirements_path = node_path / "requirements.txt"
+            if requirements_path.exists():
+                res_req = subprocess.run([str(venv_pip), "install", "-r", str(requirements_path)], capture_output=True, text=True)
+                if res_req.returncode != 0:
+                    logger.warning(f"Custom node requirements install warning: {res_req.stderr}")
 
     @classmethod
     def _run_install_zip(cls, target_path: Path):
@@ -286,6 +303,25 @@ class ComfyUIInstaller:
             cls._message = "Extracting custom nodes..."
             cls._progress = 0.8
             cls._extract_zip(node_zip, node_path)
+
+            cls._step = "Installing Dependencies"
+            cls._message = "Installing core & custom nodes dependencies..."
+            cls._progress = 0.95
+            venv_pip = Path(__file__).resolve().parent.parent.parent / "venv" / "Scripts" / "pip.exe"
+            if venv_pip.exists():
+                # Install Core Requirements
+                core_reqs = target_path / "requirements.txt"
+                if core_reqs.exists():
+                    res_core = subprocess.run([str(venv_pip), "install", "-r", str(core_reqs)], capture_output=True, text=True)
+                    if res_core.returncode != 0:
+                        logger.warning(f"Core requirements install warning: {res_core.stderr}")
+
+                # Install Node Requirements
+                requirements_path = node_path / "requirements.txt"
+                if requirements_path.exists():
+                    res_req = subprocess.run([str(venv_pip), "install", "-r", str(requirements_path)], capture_output=True, text=True)
+                    if res_req.returncode != 0:
+                        logger.warning(f"Custom node requirements install warning: {res_req.stderr}")
 
         finally:
             shutil.rmtree(temp_dir, ignore_errors=True)
