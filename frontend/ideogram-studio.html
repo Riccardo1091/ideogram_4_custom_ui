@@ -1,1871 +1,2078 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Ideogram Studio — Local Control Room</title>
     <!-- Premium Fonts Pairing: Syne for Headings, Plus Jakarta Sans for Body -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
     <style>
-        :root {
-            --bg-base: #0a0b10;
-            --bg-panel: rgba(18, 20, 29, 0.7);
-            --bg-panel-hover: rgba(26, 29, 43, 0.85);
-            --border-glow: rgba(45, 212, 191, 0.15);
-            --border-glow-active: rgba(45, 212, 191, 0.6);
-            --accent-teal: #2dd4bf;
-            --accent-indigo: #6366f1;
-            --accent-indigo-glow: rgba(99, 102, 241, 0.4);
-            --text-main: #f3f4f6;
-            --text-muted: #9ca3af;
-            --font-display: 'Syne', sans-serif;
-            --font-body: 'Plus Jakarta Sans', sans-serif;
-            --glass-blur: blur(16px);
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            user-select: none;
-        }
-
-        body {
-            background-color: var(--bg-base);
-            background-image: 
-                radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 40%),
-                radial-gradient(circle at 90% 80%, rgba(45, 212, 191, 0.12) 0%, transparent 45%);
-            color: var(--text-main);
-            font-family: var(--font-body);
-            min-height: 100vh;
-            overflow-x: hidden;
-            display: flex;
-            flex-direction: column;
-        }
-
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1.5rem 2.5rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            background: rgba(10, 11, 16, 0.8);
-            backdrop-filter: var(--glass-blur);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .logo-container {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
-        .logo-mark {
-            width: 2.2rem;
-            height: 2.2rem;
-            background: linear-gradient(135deg, var(--accent-teal), var(--accent-indigo));
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: var(--font-display);
-            font-weight: 800;
-            color: var(--bg-base);
-            box-shadow: 0 0 15px var(--accent-indigo-glow);
-        }
-
-        h1 {
-            font-family: var(--font-display);
-            font-weight: 800;
-            font-size: 1.5rem;
-            letter-spacing: -0.5px;
-            background: linear-gradient(to right, #ffffff, #a5b4fc);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .header-actions {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .settings-trigger-btn {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            color: var(--text-muted);
-            padding: 0.4rem 0.9rem;
-            border-radius: 9999px;
-            font-size: 0.8rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-        }
-
-        .settings-trigger-btn:hover {
-            background: rgba(255, 255, 255, 0.08);
-            border-color: var(--accent-teal);
-            color: #ffffff;
-        }
-
-        .status-badge {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            padding: 0.4rem 0.9rem;
-            border-radius: 9999px;
-            font-size: 0.8rem;
-            font-weight: 500;
-        }
-
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background-color: #ef4444; /* Default offline */
-            box-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
-            transition: all 0.3s ease;
-        }
-
-        .status-dot.online {
-            background-color: var(--accent-teal);
-            box-shadow: 0 0 8px var(--accent-teal);
-        }
-
-        .main-layout {
-            display: flex;
-            flex: 1;
-            padding: 2rem;
-            gap: 2rem;
-            max-width: 1600px;
-            margin: 0 auto;
-            width: 100%;
-        }
-
-        /* Control Panel sidebar styling */
-        .control-panel {
-            width: 420px;
-            flex-shrink: 0;
-            background: var(--bg-panel);
-            backdrop-filter: var(--glass-blur);
-            border: 1px solid var(--border-glow);
-            border-radius: 20px;
-            padding: 1.75rem;
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-            transition: border-color 0.3s ease;
-        }
-
-        .control-panel:hover {
-            border-color: rgba(45, 212, 191, 0.3);
-        }
-
-        .panel-section-title {
-            font-family: var(--font-display);
-            font-size: 0.95rem;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-            color: var(--accent-teal);
-            margin-bottom: 0.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        /* Workspace main viewport styling */
-        .workspace {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 2rem;
-            min-width: 0; /* Prevents flex children from breaking layout */
-        }
-
-        /* Tab toggles for prompt type */
-        .mode-toggle {
-            display: flex;
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 10px;
-            padding: 0.25rem;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .mode-btn {
-            flex: 1;
-            background: transparent;
-            border: none;
-            color: var(--text-muted);
-            padding: 0.5rem;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 500;
-            font-size: 0.85rem;
-            transition: all 0.2s ease;
-        }
-
-        .mode-btn.active {
-            background: rgba(99, 102, 241, 0.2);
-            color: #ffffff;
-            border: 1px solid rgba(99, 102, 241, 0.3);
-        }
-
-        /* Form elements */
-        .input-group {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .input-label {
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: #d1d5db;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        textarea {
-            width: 100%;
-            height: 120px;
-            background: rgba(0, 0, 0, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 12px;
-            color: var(--text-main);
-            padding: 0.75rem;
-            font-family: var(--font-body);
-            font-size: 0.9rem;
-            resize: none;
-            transition: all 0.3s ease;
-        }
-
-        textarea:focus {
-            outline: none;
-            border-color: var(--accent-indigo);
-            box-shadow: 0 0 10px rgba(99, 102, 241, 0.2);
-        }
-
-        /* Presets quick selection list */
-        .preset-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 0.5rem;
-        }
-
-        .preset-card {
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 10px;
-            padding: 0.6rem;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .preset-card:hover {
-            background: rgba(255, 255, 255, 0.05);
-            border-color: rgba(255, 255, 255, 0.15);
-        }
-
-        .preset-card.active {
-            background: linear-gradient(135deg, rgba(45, 212, 191, 0.1) 0%, rgba(99, 102, 241, 0.1) 100%);
-            border-color: var(--accent-teal);
-            box-shadow: 0 0 10px rgba(45, 212, 191, 0.15);
-        }
-
-        .preset-title {
-            font-weight: 600;
-            font-size: 0.8rem;
-            color: #ffffff;
-        }
-
-        .preset-desc {
-            font-size: 0.65rem;
-            color: var(--text-muted);
-            margin-top: 0.2rem;
-        }
-
-        /* Aspect ratio selection */
-        .aspect-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 0.5rem;
-        }
-
-        .aspect-btn {
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 8px;
-            padding: 0.5rem;
-            font-size: 0.75rem;
-            font-weight: 500;
-            color: var(--text-muted);
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .aspect-btn:hover {
-            color: #ffffff;
-            border-color: rgba(255, 255, 255, 0.15);
-        }
-
-        .aspect-btn.active {
-            border-color: var(--accent-indigo);
-            background: rgba(99, 102, 241, 0.15);
-            color: #ffffff;
-        }
-
-        /* Double-column numerical settings */
-        .param-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 0.75rem;
-        }
-
-        input[type="number"], input[type="text"] {
-            width: 100%;
-            background: rgba(0, 0, 0, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 8px;
-            padding: 0.5rem;
-            color: #ffffff;
-            font-size: 0.85rem;
-            transition: border-color 0.2s ease;
-        }
-
-        input[type="number"]:focus, input[type="text"]:focus {
-            outline: none;
-            border-color: var(--accent-teal);
-        }
-
-        .path-picker-row {
-            display: grid;
-            grid-template-columns: minmax(0, 1fr) auto;
-            gap: 0.5rem;
-            align-items: center;
-        }
-
-        .path-picker-input {
-            cursor: pointer;
-        }
-
-        .path-picker-btn {
-            width: auto;
-            min-width: 78px;
-            height: 34px;
-            padding: 0 0.65rem;
-            white-space: nowrap;
-        }
-
-        /* Collapsible Accordion for Advanced Params */
-        .accordion-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: pointer;
-            padding: 0.5rem 0;
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
-            margin-top: 0.5rem;
-        }
-
-        .accordion-title {
-            font-size: 0.8rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: var(--text-muted);
-        }
-
-        .accordion-icon {
-            font-size: 0.8rem;
-            transition: transform 0.2s ease;
-        }
-
-        .accordion-content {
-            display: none;
-            flex-direction: column;
-            gap: 1rem;
-            padding-top: 0.75rem;
-        }
-
-        .accordion-content.open {
-            display: flex;
-        }
-
-        .accordion-header.open .accordion-icon {
-            transform: rotate(180deg);
-        }
-
-        /* Master Generate Button */
-        .generate-btn {
-            background: linear-gradient(135deg, var(--accent-teal), var(--accent-indigo));
-            border: none;
-            border-radius: 12px;
-            padding: 1rem;
-            color: var(--bg-base);
-            font-family: var(--font-display);
-            font-weight: 800;
-            font-size: 1.1rem;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3);
-        }
-
-        .generate-btn:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 25px rgba(99, 102, 241, 0.5);
-            filter: brightness(1.1);
-        }
-
-        .generate-btn:disabled {
-            background: #1f2937;
-            color: #6b7280;
-            cursor: not-allowed;
-            box-shadow: none;
-        }
-
-        /* Loader Overlay inside preview */
-        .preview-wrapper {
-            background: var(--bg-panel);
-            border: 1px solid var(--border-glow);
-            border-radius: 24px;
-            min-height: 500px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
-        }
-
-        .preview-image {
-            max-width: 100%;
-            max-height: 700px;
-            object-fit: contain;
-            border-radius: 16px;
-            opacity: 0;
-            transform: scale(0.98);
-            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .preview-image.loaded {
-            opacity: 1;
-            transform: scale(1);
-        }
-
-        .placeholder-box {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 1rem;
-            color: var(--text-muted);
-            text-align: center;
-        }
-
-        .placeholder-icon {
-            font-size: 3rem;
-            color: rgba(255, 255, 255, 0.05);
-        }
-
-        /* Live Progress Dashboard styles */
-        .progress-overlay-container {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(10, 11, 16, 0.65);
-            backdrop-filter: blur(12px);
-            z-index: 50;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem;
-            animation: progressFadeIn 0.3s ease;
-        }
-
-        @keyframes progressFadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        .progress-details-card {
-            background: rgba(18, 20, 29, 0.85);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
-            border-radius: 16px;
-            width: 380px;
-            padding: 1.5rem;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .progress-title-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .progress-engine-tag {
-            font-family: var(--font-display);
-            font-size: 0.9rem;
-            font-weight: 700;
-            color: #ffffff;
-            letter-spacing: 0.5px;
-        }
-
-        .progress-pct-val {
-            font-family: var(--font-display);
-            font-size: 1.2rem;
-            font-weight: 800;
-            color: var(--accent-teal);
-            text-shadow: 0 0 10px rgba(45, 212, 191, 0.3);
-        }
-
-        .progress-bar-track {
-            width: 100%;
-            height: 6px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 999px;
-            overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.03);
-        }
-
-        .progress-bar-fill {
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(to right, var(--accent-teal), var(--accent-indigo));
-            border-radius: 999px;
-            transition: width 0.3s ease;
-            box-shadow: 0 0 10px rgba(45, 212, 191, 0.5);
-        }
-
-        .progress-metrics-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 0.5rem;
-            margin-top: 0.25rem;
-        }
-
-        .metric-item {
-            background: rgba(0, 0, 0, 0.2);
-            padding: 0.5rem;
-            border-radius: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.03);
-            display: flex;
-            flex-direction: column;
-        }
-
-        .metric-lbl {
-            font-size: 0.65rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .metric-val {
-            font-size: 0.85rem;
-            font-weight: 700;
-            color: #ffffff;
-            margin-top: 0.1rem;
-        }
-
-        /* Setup Wizard Overlay & Settings modals */
-        .wizard-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(10, 11, 16, 0.85);
-            backdrop-filter: var(--glass-blur);
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem;
-        }
-
-        .wizard-card {
-            background: rgba(18, 20, 29, 0.9);
-            border: 1px solid var(--border-glow);
-            box-shadow: 0 0 30px rgba(99, 102, 241, 0.1), 0 10px 40px rgba(0,0,0,0.5);
-            border-radius: 24px;
-            width: 650px;
-            max-width: 100%;
-            padding: 2.5rem;
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-            animation: wizardFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        @keyframes wizardFadeIn {
-            from { opacity: 0; transform: translateY(20px) scale(0.98); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-
-        .wizard-header h2 {
-            font-family: var(--font-display);
-            font-size: 1.6rem;
-            background: linear-gradient(to right, #ffffff, var(--accent-teal));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 0.5rem;
-        }
-
-        .wizard-header p {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            line-height: 1.4;
-        }
-
-        .wizard-steps-indicator {
-            display: flex;
-            justify-content: space-between;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            padding-bottom: 1rem;
-            margin-bottom: 0.5rem;
-            gap: 1rem;
-        }
-
-        .step-dot {
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: var(--text-muted);
-            transition: color 0.3s ease;
-        }
-
-        .step-dot.active {
-            color: var(--accent-teal);
-            text-shadow: 0 0 8px rgba(45, 212, 191, 0.4);
-        }
-
-        .step-dot.done {
-            color: #ffffff;
-        }
-
-        .wizard-step-content {
-            flex-direction: column;
-            gap: 0.85rem;
-        }
-
-        .wizard-step-content h3 {
-            font-family: var(--font-display);
-            font-size: 1.1rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .wizard-step-content p {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            line-height: 1.5;
-        }
-
-        /* Guided templates bar */
-        .template-bar {
-            display: flex;
-            gap: 0.5rem;
-            overflow-x: auto;
-            padding-bottom: 0.5rem;
-        }
-
-        .template-chip {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 20px;
-            padding: 0.35rem 0.8rem;
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            cursor: pointer;
-            white-space: nowrap;
-            transition: all 0.2s ease;
-        }
-
-        .template-chip:hover {
-            color: #ffffff;
-            border-color: var(--accent-teal);
-            background: rgba(45, 212, 191, 0.05);
-        }
-
-        /* History Grid Section */
-        .history-section {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .history-header {
-            font-family: var(--font-display);
-            font-size: 1.1rem;
-            color: #ffffff;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .history-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-            gap: 1rem;
-        }
-
-        .history-card {
-            background: var(--bg-panel);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 12px;
-            overflow: hidden;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            position: relative;
-            aspect-ratio: 1;
-        }
-
-        .history-card:hover {
-            border-color: var(--accent-teal);
-            transform: scale(1.03);
-        }
-
-        .history-card img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        /* Diagnostic Drawer */
-        .diag-pane {
-            margin-top: auto;
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
-            padding-top: 1rem;
-        }
-
-        .diag-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 0.5rem;
-            font-size: 0.7rem;
-            color: var(--text-muted);
-        }
-
-        .diag-item {
-            background: rgba(0, 0, 0, 0.15);
-            padding: 0.4rem;
-            border-radius: 6px;
-            border: 1px solid rgba(255, 255, 255, 0.03);
-        }
-
-        .diag-label {
-            font-weight: 600;
-            color: #9ca3af;
-        }
-
-        .diag-val {
-            color: #e5e7eb;
-            font-family: monospace;
-            margin-top: 0.1rem;
-        }
-
-        /* Scrollbar styles */
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: rgba(0,0,0,0.1);
-        }
-        ::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 999px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--accent-teal);
-        }
+      :root {
+        --bg-base: #0a0b10;
+        --bg-panel: rgba(18, 20, 29, 0.7);
+        --bg-panel-hover: rgba(26, 29, 43, 0.85);
+        --border-glow: rgba(45, 212, 191, 0.15);
+        --border-glow-active: rgba(45, 212, 191, 0.6);
+        --accent-teal: #2dd4bf;
+        --accent-indigo: #6366f1;
+        --accent-indigo-glow: rgba(99, 102, 241, 0.4);
+        --text-main: #f3f4f6;
+        --text-muted: #9ca3af;
+        --font-display: "Syne", sans-serif;
+        --font-body: "Plus Jakarta Sans", sans-serif;
+        --glass-blur: blur(16px);
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        user-select: none;
+      }
+
+      body {
+        background-color: var(--bg-base);
+        background-image:
+          radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 40%),
+          radial-gradient(circle at 90% 80%, rgba(45, 212, 191, 0.12) 0%, transparent 45%);
+        color: var(--text-main);
+        font-family: var(--font-body);
+        min-height: 100vh;
+        overflow-x: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+
+      header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.5rem 2.5rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        background: rgba(10, 11, 16, 0.8);
+        backdrop-filter: var(--glass-blur);
+        position: sticky;
+        top: 0;
+        z-index: 100;
+      }
+
+      .logo-container {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
+
+      .logo-mark {
+        width: 2.2rem;
+        height: 2.2rem;
+        background: linear-gradient(135deg, var(--accent-teal), var(--accent-indigo));
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: var(--font-display);
+        font-weight: 800;
+        color: var(--bg-base);
+        box-shadow: 0 0 15px var(--accent-indigo-glow);
+      }
+
+      h1 {
+        font-family: var(--font-display);
+        font-weight: 800;
+        font-size: 1.5rem;
+        letter-spacing: -0.5px;
+        background: linear-gradient(to right, #ffffff, #a5b4fc);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      .settings-trigger-btn {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        color: var(--text-muted);
+        padding: 0.4rem 0.9rem;
+        border-radius: 9999px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+      }
+
+      .settings-trigger-btn:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: var(--accent-teal);
+        color: #ffffff;
+      }
+
+      .status-badge {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        padding: 0.4rem 0.9rem;
+        border-radius: 9999px;
+        font-size: 0.8rem;
+        font-weight: 500;
+      }
+
+      .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: #ef4444; /* Default offline */
+        box-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
+        transition: all 0.3s ease;
+      }
+
+      .status-dot.online {
+        background-color: var(--accent-teal);
+        box-shadow: 0 0 8px var(--accent-teal);
+      }
+
+      .main-layout {
+        display: flex;
+        flex: 1;
+        padding: 2rem;
+        gap: 2rem;
+        max-width: 1600px;
+        margin: 0 auto;
+        width: 100%;
+      }
+
+      /* Control Panel sidebar styling */
+      .control-panel {
+        width: 420px;
+        flex-shrink: 0;
+        background: var(--bg-panel);
+        backdrop-filter: var(--glass-blur);
+        border: 1px solid var(--border-glow);
+        border-radius: 20px;
+        padding: 1.75rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        transition: border-color 0.3s ease;
+      }
+
+      .control-panel:hover {
+        border-color: rgba(45, 212, 191, 0.3);
+      }
+
+      .panel-section-title {
+        font-family: var(--font-display);
+        font-size: 0.95rem;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        color: var(--accent-teal);
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      /* Workspace main viewport styling */
+      .workspace {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+        min-width: 0; /* Prevents flex children from breaking layout */
+      }
+
+      /* Tab toggles for prompt type */
+      .mode-toggle {
+        display: flex;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 10px;
+        padding: 0.25rem;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+      }
+
+      .mode-btn {
+        flex: 1;
+        background: transparent;
+        border: none;
+        color: var(--text-muted);
+        padding: 0.5rem;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 500;
+        font-size: 0.85rem;
+        transition: all 0.2s ease;
+      }
+
+      .mode-btn.active {
+        background: rgba(99, 102, 241, 0.2);
+        color: #ffffff;
+        border: 1px solid rgba(99, 102, 241, 0.3);
+      }
+
+      /* Form elements */
+      .input-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+
+      .input-label {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #d1d5db;
+        display: flex;
+        justify-content: space-between;
+      }
+
+      textarea {
+        width: 100%;
+        height: 120px;
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        color: var(--text-main);
+        padding: 0.75rem;
+        font-family: var(--font-body);
+        font-size: 0.9rem;
+        resize: none;
+        transition: all 0.3s ease;
+      }
+
+      textarea:focus {
+        outline: none;
+        border-color: var(--accent-indigo);
+        box-shadow: 0 0 10px rgba(99, 102, 241, 0.2);
+      }
+
+      /* Presets quick selection list */
+      .preset-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.5rem;
+      }
+
+      .preset-card {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 10px;
+        padding: 0.6rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .preset-card:hover {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: rgba(255, 255, 255, 0.15);
+      }
+
+      .preset-card.active {
+        background: linear-gradient(135deg, rgba(45, 212, 191, 0.1) 0%, rgba(99, 102, 241, 0.1) 100%);
+        border-color: var(--accent-teal);
+        box-shadow: 0 0 10px rgba(45, 212, 191, 0.15);
+      }
+
+      .preset-title {
+        font-weight: 600;
+        font-size: 0.8rem;
+        color: #ffffff;
+      }
+
+      .preset-desc {
+        font-size: 0.65rem;
+        color: var(--text-muted);
+        margin-top: 0.2rem;
+      }
+
+      /* Aspect ratio selection */
+      .aspect-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.5rem;
+      }
+
+      .aspect-btn {
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 8px;
+        padding: 0.5rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: var(--text-muted);
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .aspect-btn:hover {
+        color: #ffffff;
+        border-color: rgba(255, 255, 255, 0.15);
+      }
+
+      .aspect-btn.active {
+        border-color: var(--accent-indigo);
+        background: rgba(99, 102, 241, 0.15);
+        color: #ffffff;
+      }
+
+      /* Double-column numerical settings */
+      .param-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+      }
+
+      input[type="number"],
+      input[type="text"] {
+        width: 100%;
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 8px;
+        padding: 0.5rem;
+        color: #ffffff;
+        font-size: 0.85rem;
+        transition: border-color 0.2s ease;
+      }
+
+      input[type="number"]:focus,
+      input[type="text"]:focus {
+        outline: none;
+        border-color: var(--accent-teal);
+      }
+
+      .path-picker-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 0.5rem;
+        align-items: center;
+      }
+
+      .path-picker-input {
+        cursor: pointer;
+      }
+
+      .path-picker-btn {
+        width: auto;
+        min-width: 78px;
+        height: 34px;
+        padding: 0 0.65rem;
+        white-space: nowrap;
+      }
+
+      /* Collapsible Accordion for Advanced Params */
+      .accordion-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        cursor: pointer;
+        padding: 0.5rem 0;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+        margin-top: 0.5rem;
+      }
+
+      .accordion-title {
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-muted);
+      }
+
+      .accordion-icon {
+        font-size: 0.8rem;
+        transition: transform 0.2s ease;
+      }
+
+      .accordion-content {
+        display: none;
+        flex-direction: column;
+        gap: 1rem;
+        padding-top: 0.75rem;
+      }
+
+      .accordion-content.open {
+        display: flex;
+      }
+
+      .accordion-header.open .accordion-icon {
+        transform: rotate(180deg);
+      }
+
+      /* Master Generate Button */
+      .generate-btn {
+        background: linear-gradient(135deg, var(--accent-teal), var(--accent-indigo));
+        border: none;
+        border-radius: 12px;
+        padding: 1rem;
+        color: var(--bg-base);
+        font-family: var(--font-display);
+        font-weight: 800;
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3);
+      }
+
+      .generate-btn:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 25px rgba(99, 102, 241, 0.5);
+        filter: brightness(1.1);
+      }
+
+      .generate-btn:disabled {
+        background: #1f2937;
+        color: #6b7280;
+        cursor: not-allowed;
+        box-shadow: none;
+      }
+
+      /* Loader Overlay inside preview */
+      .preview-wrapper {
+        background: var(--bg-panel);
+        border: 1px solid var(--border-glow);
+        border-radius: 24px;
+        min-height: 500px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+      }
+
+      .preview-image {
+        max-width: 100%;
+        max-height: 700px;
+        object-fit: contain;
+        border-radius: 16px;
+        opacity: 0;
+        transform: scale(0.98);
+        transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      .preview-image.loaded {
+        opacity: 1;
+        transform: scale(1);
+      }
+
+      .placeholder-box {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+        color: var(--text-muted);
+        text-align: center;
+      }
+
+      .placeholder-icon {
+        font-size: 3rem;
+        color: rgba(255, 255, 255, 0.05);
+      }
+
+      /* Live Progress Dashboard styles */
+      .progress-overlay-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(10, 11, 16, 0.65);
+        backdrop-filter: blur(12px);
+        z-index: 50;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+        animation: progressFadeIn 0.3s ease;
+      }
+
+      @keyframes progressFadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      .progress-details-card {
+        background: rgba(18, 20, 29, 0.85);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+        border-radius: 16px;
+        width: 380px;
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .progress-title-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .progress-engine-tag {
+        font-family: var(--font-display);
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: #ffffff;
+        letter-spacing: 0.5px;
+      }
+
+      .progress-pct-val {
+        font-family: var(--font-display);
+        font-size: 1.2rem;
+        font-weight: 800;
+        color: var(--accent-teal);
+        text-shadow: 0 0 10px rgba(45, 212, 191, 0.3);
+      }
+
+      .progress-bar-track {
+        width: 100%;
+        height: 6px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 999px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.03);
+      }
+
+      .progress-bar-fill {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(to right, var(--accent-teal), var(--accent-indigo));
+        border-radius: 999px;
+        transition: width 0.3s ease;
+        box-shadow: 0 0 10px rgba(45, 212, 191, 0.5);
+      }
+
+      .progress-metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.5rem;
+        margin-top: 0.25rem;
+      }
+
+      .metric-item {
+        background: rgba(0, 0, 0, 0.2);
+        padding: 0.5rem;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.03);
+        display: flex;
+        flex-direction: column;
+      }
+
+      .metric-lbl {
+        font-size: 0.65rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .metric-val {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #ffffff;
+        margin-top: 0.1rem;
+      }
+
+      /* Setup Wizard Overlay & Settings modals */
+      .wizard-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(10, 11, 16, 0.85);
+        backdrop-filter: var(--glass-blur);
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+      }
+
+      .wizard-card {
+        background: rgba(18, 20, 29, 0.9);
+        border: 1px solid var(--border-glow);
+        box-shadow:
+          0 0 30px rgba(99, 102, 241, 0.1),
+          0 10px 40px rgba(0, 0, 0, 0.5);
+        border-radius: 24px;
+        width: 650px;
+        max-width: 100%;
+        padding: 2.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        animation: wizardFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      @keyframes wizardFadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px) scale(0.98);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      .wizard-header h2 {
+        font-family: var(--font-display);
+        font-size: 1.6rem;
+        background: linear-gradient(to right, #ffffff, var(--accent-teal));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 0.5rem;
+      }
+
+      .wizard-header p {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        line-height: 1.4;
+      }
+
+      .wizard-steps-indicator {
+        display: flex;
+        justify-content: space-between;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        padding-bottom: 1rem;
+        margin-bottom: 0.5rem;
+        gap: 1rem;
+      }
+
+      .step-dot {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        transition: color 0.3s ease;
+      }
+
+      .step-dot.active {
+        color: var(--accent-teal);
+        text-shadow: 0 0 8px rgba(45, 212, 191, 0.4);
+      }
+
+      .step-dot.done {
+        color: #ffffff;
+      }
+
+      .wizard-step-content {
+        flex-direction: column;
+        gap: 0.85rem;
+      }
+
+      .wizard-step-content h3 {
+        font-family: var(--font-display);
+        font-size: 1.1rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .wizard-step-content p {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        line-height: 1.5;
+      }
+
+      /* History Grid Section */
+      .history-section {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .history-header {
+        font-family: var(--font-display);
+        font-size: 1.1rem;
+        color: #ffffff;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .history-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 1rem;
+      }
+
+      .history-card {
+        background: var(--bg-panel);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        overflow: hidden;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        position: relative;
+        aspect-ratio: 1;
+      }
+
+      .history-card:hover {
+        border-color: var(--accent-teal);
+        transform: scale(1.03);
+      }
+
+      .history-card img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      /* Diagnostic Drawer */
+      .diag-pane {
+        margin-top: auto;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+        padding-top: 1rem;
+      }
+
+      .diag-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.5rem;
+        font-size: 0.7rem;
+        color: var(--text-muted);
+      }
+
+      .diag-item {
+        background: rgba(0, 0, 0, 0.15);
+        padding: 0.4rem;
+        border-radius: 6px;
+        border: 1px solid rgba(255, 255, 255, 0.03);
+      }
+
+      .diag-label {
+        font-weight: 600;
+        color: #9ca3af;
+      }
+
+      .diag-val {
+        color: #e5e7eb;
+        font-family: monospace;
+        margin-top: 0.1rem;
+      }
+
+      /* Scrollbar styles */
+      ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.1);
+      }
+      ::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 999px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: var(--accent-teal);
+      }
     </style>
-</head>
-<body>
-
+  </head>
+  <body>
     <header>
-        <div class="logo-container">
-            <div class="logo-mark">I</div>
-            <h1>Ideogram Studio</h1>
+      <div class="logo-container">
+        <div class="logo-mark">I</div>
+        <h1>Ideogram Studio</h1>
+      </div>
+      <div class="header-actions">
+        <button class="settings-trigger-btn" onclick="openSettingsModal()" title="System Configuration">⚙️ Settings</button>
+        <div class="status-badge">
+          <div class="status-dot" id="backendStatusDot"></div>
+          <span id="backendStatusText">Checking Backend...</span>
         </div>
-        <div class="header-actions">
-            <button class="settings-trigger-btn" onclick="openSettingsModal()" title="System Configuration">⚙️ Settings</button>
-            <div class="status-badge">
-                <div class="status-dot" id="backendStatusDot"></div>
-                <span id="backendStatusText">Checking Backend...</span>
-            </div>
-        </div>
+      </div>
     </header>
 
     <div class="main-layout">
-        <!-- Sidebar controls -->
-        <aside class="control-panel">
-            <div>
-                <div class="panel-section-title">Prompt Configuration</div>
-                <div class="mode-toggle" style="margin-bottom: 0.75rem;">
-                    <button class="mode-btn active" id="modePlain" onclick="setPromptMode('plain')">Plain Text</button>
-                    <button class="mode-btn" id="modeJson" onclick="setPromptMode('json')">Guided JSON</button>
-                </div>
-                
-                <div class="input-group">
-                    <div class="template-bar" id="templateBar" style="display: none;">
-                        <div class="template-chip" onclick="applyTemplate('typography')">T-Shirt Typography</div>
-                        <div class="template-chip" onclick="applyTemplate('sticker')">Cute Sticker</div>
-                        <div class="template-chip" onclick="applyTemplate('concept')">Cinematic Landscape</div>
-                    </div>
-                    <textarea id="promptInput" placeholder="Describe the image you want to create..."></textarea>
-                </div>
+      <!-- Sidebar controls -->
+      <aside class="control-panel">
+        <div>
+          <div class="panel-section-title">Prompt Configuration</div>
+          <div class="mode-toggle" style="margin-bottom: 0.75rem">
+            <button class="mode-btn active" id="modePlain" onclick="setPromptMode('plain')">Plain Text</button>
+            <button class="mode-btn" id="modeJson" onclick="setPromptMode('json')">Guided JSON</button>
+          </div>
+
+          <div class="input-group">
+            <textarea id="promptInput" placeholder="Describe the image you want to create..."></textarea>
+          </div>
+        </div>
+
+        <!-- Resolution and Preset config -->
+        <div>
+          <div class="panel-section-title">Presets & Parameters</div>
+          <div class="preset-grid" style="margin-bottom: 1rem">
+            <div class="preset-card active" id="preset_default" onclick="selectPreset('default')">
+              <div class="preset-title">Default</div>
+              <div class="preset-desc">20 steps | standard</div>
             </div>
-
-            <!-- Resolution and Preset config -->
-            <div>
-                <div class="panel-section-title">Presets & Parameters</div>
-                <div class="preset-grid" style="margin-bottom: 1rem;">
-                    <div class="preset-card active" id="preset_default" onclick="selectPreset('default')">
-                        <div class="preset-title">Default</div>
-                        <div class="preset-desc">20 steps | standard</div>
-                    </div>
-                    <div class="preset-card" id="preset_turbo" onclick="selectPreset('turbo')">
-                        <div class="preset-title">Turbo</div>
-                        <div class="preset-desc">12 steps | fast</div>
-                    </div>
-                    <div class="preset-card" id="preset_quality" onclick="selectPreset('quality')">
-                        <div class="preset-title">Quality</div>
-                        <div class="preset-desc">48 steps | high</div>
-                    </div>
-                </div>
-
-                <div class="input-group" style="margin-bottom: 1rem;">
-                    <div class="input-label">Aspect Ratio</div>
-                    <div class="aspect-grid">
-                        <button class="aspect-btn active" id="ratio_1_1" onclick="setAspectRatio(1024, 1024, '1_1')">1:1 Square</button>
-                        <button class="aspect-btn" id="ratio_16_9" onclick="setAspectRatio(1344, 768, '16_9')">16:9 Landscape</button>
-                        <button class="aspect-btn" id="ratio_9_16" onclick="setAspectRatio(768, 1344, '9_16')">9:16 Portrait</button>
-                        <button class="aspect-btn" id="ratio_21_9" onclick="setAspectRatio(1440, 608, '21_9')">21:9 Cinema</button>
-                    </div>
-                </div>
-
-                <div class="param-row">
-                    <div class="input-group">
-                        <label class="input-label">Width</label>
-                        <input type="number" id="widthInput" value="1024" step="64">
-                    </div>
-                    <div class="input-group">
-                        <label class="input-label">Height</label>
-                        <input type="number" id="heightInput" value="1024" step="64">
-                    </div>
-                </div>
-
-                <div class="input-group" style="margin-top: 1rem;">
-                    <label class="input-label">Seed <span style="font-weight: 300; font-size: 0.75rem;">(leave blank for random)</span></label>
-                    <input type="text" id="seedInput" placeholder="Random Seed">
-                </div>
-
-                <!-- Accordion for Advanced Params -->
-                <div class="accordion-header" id="advAccordionHeader" onclick="toggleAccordion()">
-                    <span class="accordion-title">Advanced Scheduler Parameters</span>
-                    <span class="accordion-icon" id="advAccordionIcon">▼</span>
-                </div>
-                <div class="accordion-content" id="advAccordionContent">
-                    <div class="param-row">
-                        <div class="input-group">
-                            <label class="input-label">Steps (Override)</label>
-                            <input type="number" id="overrideSteps" placeholder="Auto">
-                        </div>
-                        <div class="input-group">
-                            <label class="input-label">mu (Override)</label>
-                            <input type="number" id="overrideMu" placeholder="Auto" step="0.1">
-                        </div>
-                    </div>
-                    <div class="input-group">
-                        <label class="input-label">std (Override)</label>
-                        <input type="number" id="overrideStd" placeholder="Auto" step="0.1">
-                    </div>
-                </div>
+            <div class="preset-card" id="preset_turbo" onclick="selectPreset('turbo')">
+              <div class="preset-title">Turbo</div>
+              <div class="preset-desc">12 steps | fast</div>
             </div>
-
-            <!-- Trigger Action Button -->
-            <button class="generate-btn" id="generateButton" onclick="triggerGeneration()">Generate Image</button>
-
-            <!-- Diagnostics pane -->
-            <div class="diag-pane">
-                <div class="panel-section-title" style="font-size: 0.8rem;">System Diagnostics</div>
-                <div class="diag-grid">
-                    <div class="diag-item">
-                        <div class="diag-label">Active GPU</div>
-                        <div class="diag-val" id="diagGpu">Checking...</div>
-                    </div>
-                    <div class="diag-item">
-                        <div class="diag-label">CUDA Target</div>
-                        <div class="diag-val" id="diagCuda">Checking...</div>
-                    </div>
-                    <div class="diag-item">
-                        <div class="diag-label">VRAM Capacity</div>
-                        <div class="diag-val" id="diagVram">Checking...</div>
-                    </div>
-                    <div class="diag-item">
-                        <div class="diag-label">Active Engine</div>
-                        <div class="diag-val" id="diagEngine">Checking...</div>
-                    </div>
-                </div>
+            <div class="preset-card" id="preset_quality" onclick="selectPreset('quality')">
+              <div class="preset-title">Quality</div>
+              <div class="preset-desc">48 steps | high</div>
             </div>
-        </aside>
+          </div>
 
-        <!-- Main screen workspace -->
-        <main class="workspace">
-            <!-- Preview canvas -->
-            <div class="preview-wrapper" id="previewWrapper">
-                <div class="placeholder-box" id="previewPlaceholder">
-                    <div class="placeholder-icon">🎴</div>
-                    <p>Enter parameters on the sidebar and click generate to render.</p>
-                </div>
-                
-                <!-- Live Progress Dashboard overlay -->
-                <div class="progress-overlay-container" id="progressOverlay" style="display: none;">
-                    <div class="progress-details-card">
-                        <div class="progress-title-row">
-                            <span class="progress-engine-tag">Generating Image...</span>
-                            <span class="progress-pct-val" id="progressPctText">0%</span>
-                        </div>
-                        
-                        <!-- Progress bar -->
-                        <div class="progress-bar-track">
-                            <div class="progress-bar-fill" id="progressBarFill"></div>
-                        </div>
-                        
-                        <div class="progress-metrics-grid">
-                            <div class="metric-item">
-                                <span class="metric-lbl">Step</span>
-                                <span class="metric-val" id="progressStepText">0 / 0</span>
-                            </div>
-                            <div class="metric-item">
-                                <span class="metric-lbl">Elapsed</span>
-                                <span class="metric-val" id="progressElapsedText">0.0s</span>
-                            </div>
-                            <div class="metric-item">
-                                <span class="metric-lbl">Remaining</span>
-                                <span class="metric-val" id="progressRemainingText">estimating...</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <img src="" alt="Output Image" class="preview-image" id="previewImg">
+          <div class="input-group" style="margin-bottom: 1rem">
+            <div class="input-label">Aspect Ratio</div>
+            <div class="aspect-grid">
+              <button class="aspect-btn active" id="ratio_1_1" onclick="setAspectRatio(1024, 1024, '1_1')">1:1 Square</button>
+              <button class="aspect-btn" id="ratio_16_9" onclick="setAspectRatio(1344, 768, '16_9')">16:9 Landscape</button>
+              <button class="aspect-btn" id="ratio_9_16" onclick="setAspectRatio(768, 1344, '9_16')">9:16 Portrait</button>
+              <button class="aspect-btn" id="ratio_21_9" onclick="setAspectRatio(1440, 608, '21_9')">21:9 Cinema</button>
             </div>
+          </div>
 
-            <!-- History grid -->
-            <div class="history-section">
-                <div class="history-header">
-                    <span>Recent Generations</span>
-                    <span style="font-size: 0.75rem; color: var(--text-muted);" id="historyCount">0 Jobs</span>
-                </div>
-                <div class="history-grid" id="historyGrid">
-                    <!-- History cards rendered dynamically -->
-                </div>
+          <div class="param-row">
+            <div class="input-group">
+              <label class="input-label">Width</label>
+              <input type="number" id="widthInput" value="1024" step="64" />
             </div>
-        </main>
+            <div class="input-group">
+              <label class="input-label">Height</label>
+              <input type="number" id="heightInput" value="1024" step="64" />
+            </div>
+          </div>
+
+          <div class="input-group" style="margin-top: 1rem">
+            <label class="input-label">Seed <span style="font-weight: 300; font-size: 0.75rem">(leave blank for random)</span></label>
+            <input type="text" id="seedInput" placeholder="Random Seed" />
+          </div>
+
+          <!-- Accordion for Advanced Params -->
+          <div class="accordion-header" id="advAccordionHeader" onclick="toggleAccordion()">
+            <span class="accordion-title">Advanced Scheduler Parameters</span>
+            <span class="accordion-icon" id="advAccordionIcon">▼</span>
+          </div>
+          <div class="accordion-content" id="advAccordionContent">
+            <div class="param-row">
+              <div class="input-group">
+                <label class="input-label">Steps (Override)</label>
+                <input type="number" id="overrideSteps" placeholder="Auto" />
+              </div>
+              <div class="input-group">
+                <label class="input-label">mu (Override)</label>
+                <input type="number" id="overrideMu" placeholder="Auto" step="0.1" />
+              </div>
+            </div>
+            <div class="input-group">
+              <label class="input-label">std (Override)</label>
+              <input type="number" id="overrideStd" placeholder="Auto" step="0.1" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Trigger Action Button -->
+        <button class="generate-btn" id="generateButton" onclick="triggerGeneration()">Generate Image</button>
+
+        <!-- Diagnostics pane -->
+        <div class="diag-pane">
+          <div class="panel-section-title" style="font-size: 0.8rem">System Diagnostics</div>
+          <div class="diag-grid">
+            <div class="diag-item">
+              <div class="diag-label">Active GPU</div>
+              <div class="diag-val" id="diagGpu">Checking...</div>
+            </div>
+            <div class="diag-item">
+              <div class="diag-label">CUDA Target</div>
+              <div class="diag-val" id="diagCuda">Checking...</div>
+            </div>
+            <div class="diag-item">
+              <div class="diag-label">VRAM Capacity</div>
+              <div class="diag-val" id="diagVram">Checking...</div>
+            </div>
+            <div class="diag-item">
+              <div class="diag-label">Active Engine</div>
+              <div class="diag-val" id="diagEngine">Checking...</div>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main screen workspace -->
+      <main class="workspace">
+        <!-- Preview canvas -->
+        <div class="preview-wrapper" id="previewWrapper">
+          <div class="placeholder-box" id="previewPlaceholder">
+            <div class="placeholder-icon">🎴</div>
+            <p>Enter parameters on the sidebar and click generate to render.</p>
+          </div>
+
+          <!-- Live Progress Dashboard overlay -->
+          <div class="progress-overlay-container" id="progressOverlay" style="display: none">
+            <div class="progress-details-card">
+              <div class="progress-title-row">
+                <span class="progress-engine-tag">Generating Image...</span>
+                <span class="progress-pct-val" id="progressPctText">0%</span>
+              </div>
+
+              <!-- Progress bar -->
+              <div class="progress-bar-track">
+                <div class="progress-bar-fill" id="progressBarFill"></div>
+              </div>
+
+              <div class="progress-metrics-grid">
+                <div class="metric-item">
+                  <span class="metric-lbl">Step</span>
+                  <span class="metric-val" id="progressStepText">0 / 0</span>
+                </div>
+                <div class="metric-item">
+                  <span class="metric-lbl">Elapsed</span>
+                  <span class="metric-val" id="progressElapsedText">0.0s</span>
+                </div>
+                <div class="metric-item">
+                  <span class="metric-lbl">Remaining</span>
+                  <span class="metric-val" id="progressRemainingText">estimating...</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <img src="" alt="Output Image" class="preview-image" id="previewImg" />
+        </div>
+
+        <!-- History grid -->
+        <div class="history-section">
+          <div class="history-header">
+            <span>Recent Generations</span>
+            <span style="font-size: 0.75rem; color: var(--text-muted)" id="historyCount">0 Jobs</span>
+          </div>
+          <div class="history-grid" id="historyGrid">
+            <!-- History cards rendered dynamically -->
+          </div>
+        </div>
+      </main>
     </div>
 
     <!-- Setup Wizard Modal / Overlay -->
-    <div id="setupWizardOverlay" class="wizard-overlay" style="display: none;">
-        <div class="wizard-card">
-            <div class="wizard-header">
-                <h2>System Setup Required</h2>
-                <p>Welcome to Ideogram Studio. To run local GPU generation, we need to locate your ComfyUI environment and target weights.</p>
-            </div>
-            
-            <div class="wizard-steps-indicator">
-                <div class="step-dot active" id="stepIndicator1">1. Core Engine</div>
-                <div class="step-dot" id="stepIndicator2">2. Models & Weights</div>
-                <div class="step-dot" id="stepIndicator3">3. Test Run</div>
-            </div>
-
-            <!-- Step 1 Content -->
-            <div class="wizard-step-content" id="wizardStep1">
-                <h3>Step 1: ComfyUI Core Engine</h3>
-                <p>Welcome to Ideogram Studio. To run local GPU generation, we need to locate or download the ComfyUI core engine.</p>
-                
-                <!-- Auto-Install Option -->
-                <div id="comfyAutoInstallContainer" style="background: rgba(45, 212, 191, 0.03); border: 1px solid rgba(45, 212, 191, 0.1); border-radius: 16px; padding: 1.25rem; margin-top: 1rem; margin-bottom: 1rem; display: flex; flex-direction: column; gap: 0.75rem;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
-                        <div>
-                            <div style="font-weight: 700; font-size: 0.95rem; color: #fff; display: flex; align-items: center; gap: 0.4rem;">
-                                <span>⚡ Auto-Install Engine (Recommended)</span>
-                                <span id="comfyInstallBadge" class="status-badge" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); font-size: 0.65rem; padding: 0.1rem 0.4rem; border-radius: 9999px;">Checking...</span>
-                            </div>
-                            <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">Downloads ComfyUI & requirements automatically to `./comfy_core`</div>
-                        </div>
-                        <button class="generate-btn" id="comfyInstallBtn" style="width: auto; padding: 0.5rem 1rem; font-size: 0.8rem;" onclick="triggerComfyInstall()">Install Now</button>
-                    </div>
-
-                    <!-- Progress and Logs Area -->
-                    <div id="comfyInstallProgressArea" style="display: none; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem;">
-                        <div style="display: flex; justify-content: space-between; font-size: 0.75rem;">
-                            <span id="comfyInstallStep" style="color: var(--accent-teal); font-weight: 600;">Downloading...</span>
-                            <span id="comfyInstallPct" style="color: #fff;">0%</span>
-                        </div>
-                        <div style="width: 100%; height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; overflow: hidden; position: relative;">
-                            <div id="comfyInstallProgressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, var(--accent-indigo), var(--accent-teal)); transition: width 0.3s ease;"></div>
-                        </div>
-                        <div id="comfyInstallLogs" style="font-family: monospace; font-size: 0.7rem; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); border-radius: 8px; padding: 0.6rem; max-height: 80px; overflow-y: auto; color: var(--text-muted); line-height: 1.4;">
-                            Ready.
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Manual Configuration Toggle -->
-                <div style="margin-bottom: 0.5rem; text-align: right;">
-                    <a href="#" id="toggleManualPathBtn" style="font-size: 0.75rem; color: var(--accent-teal); text-decoration: none;" onclick="toggleManualComfyPath(event)">Or specify manual path (Advanced) ⚙️</a>
-                </div>
-
-                <!-- Manual Path Input Group -->
-                <div id="comfyManualPathContainer" style="display: none; border-top: 1px dashed rgba(255,255,255,0.08); padding-top: 1rem; margin-top: 0.5rem; flex-direction: column; gap: 0.75rem;">
-                    <div class="input-group" style="margin-bottom: 0;">
-                        <label class="input-label">ComfyUI Custom Path</label>
-                        <div class="path-picker-row">
-                            <input type="text" id="wizardComfyPath" class="path-picker-input" placeholder="e.g. C:\Users\Riccardo\Desktop\ComfyUI" readonly data-picker-kind="directory" data-picker-title="Select ComfyUI folder">
-                            <button class="aspect-btn path-picker-btn" type="button" onclick="browseForPath('wizardComfyPath')">Browse</button>
-                        </div>
-                    </div>
-                    <p class="input-hint" style="font-size: 0.7rem; color: var(--text-muted);">Points to an existing installation containing 'models' and 'custom_nodes'.</p>
-                </div>
-            </div>
-
-            <!-- Step 2 Content -->
-            <div class="wizard-step-content" id="wizardStep2" style="display: none;">
-                <h3>Step 2: Model Files</h3>
-                <p>Select the four safetensors files required by Ideogram: the two UNets, the text encoder, and the VAE.</p>
-
-                <div class="param-row" style="margin-top: 0.75rem;">
-                    <div class="input-group">
-                        <label class="input-label">Conditional UNet</label>
-                        <div class="path-picker-row">
-                            <input type="text" id="wizardMainModel" class="path-picker-input" readonly data-picker-kind="file" data-picker-title="Select conditional UNet file" data-picker-filter="safetensors">
-                            <button class="aspect-btn path-picker-btn" type="button" onclick="browseForPath('wizardMainModel')">Browse</button>
-                        </div>
-                        <div style="font-size: 0.7rem; margin-top: 0.15rem;">
-                            <a href="https://huggingface.co/bertbobson/Ideogram-4-INT8-ConvRot/resolve/main/ideogram4-int8-ConvRot.safetensors?download=true" target="_blank" style="color: var(--accent-teal); text-decoration: none;">Download Conditional UNet 📥</a>
-                        </div>
-                    </div>
-                    <div class="input-group">
-                        <label class="input-label">Unconditional UNet</label>
-                        <div class="path-picker-row">
-                            <input type="text" id="wizardUncondModel" class="path-picker-input" value="ideogram4-unconditional-int8-ConvRot.safetensors" readonly data-picker-kind="file" data-picker-title="Select unconditional UNet file" data-picker-filter="safetensors">
-                            <button class="aspect-btn path-picker-btn" type="button" onclick="browseForPath('wizardUncondModel')">Browse</button>
-                        </div>
-                        <div style="font-size: 0.7rem; margin-top: 0.15rem;">
-                            <a href="https://huggingface.co/bertbobson/Ideogram-4-INT8-ConvRot/resolve/main/ideogram4-unconditional-int8-ConvRot.safetensors?download=true" target="_blank" style="color: var(--accent-teal); text-decoration: none;">Download Unconditional UNet 📥</a>
-                        </div>
-                    </div>
-                </div>
-                <div class="input-group" style="margin-top: 0.75rem;">
-                    <label class="input-label">Text Encoder</label>
-                    <div class="path-picker-row">
-                        <input type="text" id="wizardTextEncoder" class="path-picker-input" readonly data-picker-kind="file" data-picker-title="Select text encoder file" data-picker-filter="safetensors">
-                        <button class="aspect-btn path-picker-btn" type="button" onclick="browseForPath('wizardTextEncoder')">Browse</button>
-                    </div>
-                    <div style="font-size: 0.7rem; margin-top: 0.15rem;">
-                        <a href="https://huggingface.co/Comfy-Org/Ideogram-4/resolve/main/text_encoders/qwen3vl_8b_fp8_scaled.safetensors?download=true" target="_blank" style="color: var(--accent-teal); text-decoration: none;">Download Text Encoder (Qwen-3VL FP8) 📥</a>
-                    </div>
-                </div>
-                <div class="input-group" style="margin-top: 0.75rem;">
-                    <label class="input-label">VAE</label>
-                    <div class="path-picker-row">
-                        <input type="text" id="wizardVae" class="path-picker-input" readonly data-picker-kind="file" data-picker-title="Select VAE file" data-picker-filter="safetensors">
-                        <button class="aspect-btn path-picker-btn" type="button" onclick="browseForPath('wizardVae')">Browse</button>
-                    </div>
-                    <div style="font-size: 0.7rem; margin-top: 0.15rem;">
-                        <a href="https://huggingface.co/Comfy-Org/flux2-dev/resolve/main/split_files/vae/flux2-vae.safetensors?download=true" target="_blank" style="color: var(--accent-teal); text-decoration: none;">Download Flux VAE 📥</a>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Step 3 Content -->
-            <div class="wizard-step-content" id="wizardStep3" style="display: none;">
-                <h3>Step 3: Review Configurations</h3>
-                <p>Confirm the values before reloading the backend settings. A validation check will run on the GPU.</p>
-                <div class="status-summary" id="wizardValidationSummary" style="margin-top: 1rem; background: rgba(0,0,0,0.25); padding: 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); font-size: 0.8rem; line-height: 1.6; word-break: break-all; overflow-wrap: break-word; overflow: hidden;">
-                    <!-- Rendered dynamically -->
-                </div>
-            </div>
-
-            <div class="wizard-footer" style="display: flex; justify-content: space-between; margin-top: 1.5rem;">
-                <button class="aspect-btn" id="wizardBackBtn" style="width: 100px; display: none;" onclick="wizardPrevStep()">Back</button>
-                <div style="flex-grow: 1;"></div>
-                <button class="generate-btn" id="wizardNextBtn" style="width: 150px; font-size: 0.95rem; padding: 0.6rem;" onclick="wizardNextStep()">Next</button>
-                <button class="generate-btn" id="wizardFinishBtn" style="width: 180px; font-size: 0.95rem; padding: 0.6rem; display: none;" onclick="wizardSaveAndReload()">Save & Start</button>
-            </div>
+    <div id="setupWizardOverlay" class="wizard-overlay" style="display: none">
+      <div class="wizard-card">
+        <div class="wizard-header">
+          <h2>System Setup Required</h2>
+          <p>Welcome to Ideogram Studio. To run local GPU generation, we need to locate your ComfyUI environment and target weights.</p>
         </div>
+
+        <div class="wizard-steps-indicator">
+          <div class="step-dot active" id="stepIndicator1">1. Core Engine</div>
+          <div class="step-dot" id="stepIndicator2">2. Models & Weights</div>
+          <div class="step-dot" id="stepIndicator3">3. Test Run</div>
+        </div>
+
+        <!-- Step 1 Content -->
+        <div class="wizard-step-content" id="wizardStep1">
+          <h3>Step 1: ComfyUI Core Engine</h3>
+          <p>Welcome to Ideogram Studio. To run local GPU generation, we need to locate or download the ComfyUI core engine.</p>
+
+          <!-- Auto-Install Option -->
+          <div
+            id="comfyAutoInstallContainer"
+            style="
+              background: rgba(45, 212, 191, 0.03);
+              border: 1px solid rgba(45, 212, 191, 0.1);
+              border-radius: 16px;
+              padding: 1.25rem;
+              margin-top: 1rem;
+              margin-bottom: 1rem;
+              display: flex;
+              flex-direction: column;
+              gap: 0.75rem;
+            "
+          >
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem">
+              <div>
+                <div style="font-weight: 700; font-size: 0.95rem; color: #fff; display: flex; align-items: center; gap: 0.4rem">
+                  <span>⚡ Auto-Install Engine (Recommended)</span>
+                  <span
+                    id="comfyInstallBadge"
+                    class="status-badge"
+                    style="
+                      background: rgba(239, 68, 68, 0.1);
+                      color: #ef4444;
+                      border: 1px solid rgba(239, 68, 68, 0.2);
+                      font-size: 0.65rem;
+                      padding: 0.1rem 0.4rem;
+                      border-radius: 9999px;
+                    "
+                    >Checking...</span
+                  >
+                </div>
+                <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem">
+                  Downloads ComfyUI & requirements automatically to `./comfy_core`
+                </div>
+              </div>
+              <button class="generate-btn" id="comfyInstallBtn" style="width: auto; padding: 0.5rem 1rem; font-size: 0.8rem" onclick="triggerComfyInstall()">
+                Install Now
+              </button>
+            </div>
+
+            <!-- Progress and Logs Area -->
+            <div id="comfyInstallProgressArea" style="display: none; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem">
+              <div style="display: flex; justify-content: space-between; font-size: 0.75rem">
+                <span id="comfyInstallStep" style="color: var(--accent-teal); font-weight: 600">Downloading...</span>
+                <span id="comfyInstallPct" style="color: #fff">0%</span>
+              </div>
+              <div style="width: 100%; height: 6px; background: rgba(255, 255, 255, 0.05); border-radius: 3px; overflow: hidden; position: relative">
+                <div
+                  id="comfyInstallProgressBar"
+                  style="width: 0%; height: 100%; background: linear-gradient(90deg, var(--accent-indigo), var(--accent-teal)); transition: width 0.3s ease"
+                ></div>
+              </div>
+              <div
+                id="comfyInstallLogs"
+                style="
+                  font-family: monospace;
+                  font-size: 0.7rem;
+                  background: rgba(0, 0, 0, 0.3);
+                  border: 1px solid rgba(255, 255, 255, 0.05);
+                  border-radius: 8px;
+                  padding: 0.6rem;
+                  max-height: 80px;
+                  overflow-y: auto;
+                  color: var(--text-muted);
+                  line-height: 1.4;
+                "
+              >
+                Ready.
+              </div>
+            </div>
+          </div>
+
+          <!-- Manual Configuration Toggle -->
+          <div style="margin-bottom: 0.5rem; text-align: right">
+            <a
+              href="#"
+              id="toggleManualPathBtn"
+              style="font-size: 0.75rem; color: var(--accent-teal); text-decoration: none"
+              onclick="toggleManualComfyPath(event)"
+              >Or specify manual path (Advanced) ⚙️</a
+            >
+          </div>
+
+          <!-- Manual Path Input Group -->
+          <div
+            id="comfyManualPathContainer"
+            style="display: none; border-top: 1px dashed rgba(255, 255, 255, 0.08); padding-top: 1rem; margin-top: 0.5rem; flex-direction: column; gap: 0.75rem"
+          >
+            <div class="input-group" style="margin-bottom: 0">
+              <label class="input-label">ComfyUI Custom Path</label>
+              <div class="path-picker-row">
+                <input
+                  type="text"
+                  id="wizardComfyPath"
+                  class="path-picker-input"
+                  placeholder="e.g. C:\Users\Riccardo\Desktop\ComfyUI"
+                  readonly
+                  data-picker-kind="directory"
+                  data-picker-title="Select ComfyUI folder"
+                />
+                <button class="aspect-btn path-picker-btn" type="button" onclick="browseForPath('wizardComfyPath')">Browse</button>
+              </div>
+            </div>
+            <p class="input-hint" style="font-size: 0.7rem; color: var(--text-muted)">
+              Points to an existing installation containing 'models' and 'custom_nodes'.
+            </p>
+          </div>
+        </div>
+
+        <!-- Step 2 Content -->
+        <div class="wizard-step-content" id="wizardStep2" style="display: none">
+          <h3>Step 2: Model Files</h3>
+          <p>Select the four safetensors files required by Ideogram: the two UNets, the text encoder, and the VAE.</p>
+
+          <div class="param-row" style="margin-top: 0.75rem">
+            <div class="input-group">
+              <label class="input-label">Conditional UNet</label>
+              <div class="path-picker-row">
+                <input
+                  type="text"
+                  id="wizardMainModel"
+                  class="path-picker-input"
+                  readonly
+                  data-picker-kind="file"
+                  data-picker-title="Select conditional UNet file"
+                  data-picker-filter="safetensors"
+                />
+                <button class="aspect-btn path-picker-btn" type="button" onclick="browseForPath('wizardMainModel')">Browse</button>
+              </div>
+              <div style="font-size: 0.7rem; margin-top: 0.15rem">
+                <a
+                  href="https://huggingface.co/bertbobson/Ideogram-4-INT8-ConvRot/resolve/main/ideogram4-int8-ConvRot.safetensors?download=true"
+                  target="_blank"
+                  style="color: var(--accent-teal); text-decoration: none"
+                  >Download Conditional UNet 📥</a
+                >
+              </div>
+            </div>
+            <div class="input-group">
+              <label class="input-label">Unconditional UNet</label>
+              <div class="path-picker-row">
+                <input
+                  type="text"
+                  id="wizardUncondModel"
+                  class="path-picker-input"
+                  value="ideogram4-unconditional-int8-ConvRot.safetensors"
+                  readonly
+                  data-picker-kind="file"
+                  data-picker-title="Select unconditional UNet file"
+                  data-picker-filter="safetensors"
+                />
+                <button class="aspect-btn path-picker-btn" type="button" onclick="browseForPath('wizardUncondModel')">Browse</button>
+              </div>
+              <div style="font-size: 0.7rem; margin-top: 0.15rem">
+                <a
+                  href="https://huggingface.co/bertbobson/Ideogram-4-INT8-ConvRot/resolve/main/ideogram4-unconditional-int8-ConvRot.safetensors?download=true"
+                  target="_blank"
+                  style="color: var(--accent-teal); text-decoration: none"
+                  >Download Unconditional UNet 📥</a
+                >
+              </div>
+            </div>
+          </div>
+          <div class="input-group" style="margin-top: 0.75rem">
+            <label class="input-label">Text Encoder</label>
+            <div class="path-picker-row">
+              <input
+                type="text"
+                id="wizardTextEncoder"
+                class="path-picker-input"
+                readonly
+                data-picker-kind="file"
+                data-picker-title="Select text encoder file"
+                data-picker-filter="safetensors"
+              />
+              <button class="aspect-btn path-picker-btn" type="button" onclick="browseForPath('wizardTextEncoder')">Browse</button>
+            </div>
+            <div style="font-size: 0.7rem; margin-top: 0.15rem">
+              <a
+                href="https://huggingface.co/Comfy-Org/Ideogram-4/resolve/main/text_encoders/qwen3vl_8b_fp8_scaled.safetensors?download=true"
+                target="_blank"
+                style="color: var(--accent-teal); text-decoration: none"
+                >Download Text Encoder (Qwen-3VL FP8) 📥</a
+              >
+            </div>
+          </div>
+          <div class="input-group" style="margin-top: 0.75rem">
+            <label class="input-label">VAE</label>
+            <div class="path-picker-row">
+              <input
+                type="text"
+                id="wizardVae"
+                class="path-picker-input"
+                readonly
+                data-picker-kind="file"
+                data-picker-title="Select VAE file"
+                data-picker-filter="safetensors"
+              />
+              <button class="aspect-btn path-picker-btn" type="button" onclick="browseForPath('wizardVae')">Browse</button>
+            </div>
+            <div style="font-size: 0.7rem; margin-top: 0.15rem">
+              <a
+                href="https://huggingface.co/Comfy-Org/flux2-dev/resolve/main/split_files/vae/flux2-vae.safetensors?download=true"
+                target="_blank"
+                style="color: var(--accent-teal); text-decoration: none"
+                >Download Flux VAE 📥</a
+              >
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3 Content -->
+        <div class="wizard-step-content" id="wizardStep3" style="display: none">
+          <h3>Step 3: Review Configurations</h3>
+          <p>Confirm the values before reloading the backend settings. A validation check will run on the GPU.</p>
+          <div
+            class="status-summary"
+            id="wizardValidationSummary"
+            style="
+              margin-top: 1rem;
+              background: rgba(0, 0, 0, 0.25);
+              padding: 1rem;
+              border-radius: 12px;
+              border: 1px solid rgba(255, 255, 255, 0.05);
+              font-size: 0.8rem;
+              line-height: 1.6;
+              word-break: break-all;
+              overflow-wrap: break-word;
+              overflow: hidden;
+            "
+          >
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+
+        <div class="wizard-footer" style="display: flex; justify-content: space-between; margin-top: 1.5rem">
+          <button class="aspect-btn" id="wizardBackBtn" style="width: 100px; display: none" onclick="wizardPrevStep()">Back</button>
+          <div style="flex-grow: 1"></div>
+          <button class="generate-btn" id="wizardNextBtn" style="width: 150px; font-size: 0.95rem; padding: 0.6rem" onclick="wizardNextStep()">Next</button>
+          <button
+            class="generate-btn"
+            id="wizardFinishBtn"
+            style="width: 180px; font-size: 0.95rem; padding: 0.6rem; display: none"
+            onclick="wizardSaveAndReload()"
+          >
+            Save & Start
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- Settings Control Center Modal -->
-    <div id="settingsModal" class="wizard-overlay" style="display: none;" onclick="closeSettingsModal()">
-        <div class="wizard-card" onclick="event.stopPropagation()">
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 0.75rem;">
-                <h2 style="font-family: var(--font-display); font-size: 1.4rem; color: #ffffff;">System Settings Control Center</h2>
-                <button class="aspect-btn" style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; font-size: 0.85rem;" onclick="closeSettingsModal()">✕</button>
-            </div>
-            
-            <div style="display: flex; flex-direction: column; gap: 0.85rem; max-height: 60vh; overflow-y: auto; padding-right: 0.5rem; margin-top: 0.5rem;">
-                <!-- ComfyUI Engine Manager Section -->
-                <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 16px; padding: 1.25rem; display: flex; flex-direction: column; gap: 0.75rem;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
-                        <div>
-                            <div style="font-weight: 700; font-size: 0.95rem; color: #fff; display: flex; align-items: center; gap: 0.4rem;">
-                                <span>🤖 ComfyUI Core Engine</span>
-                                <span id="settingsComfyStatusBadge" class="status-badge" style="font-size: 0.65rem; padding: 0.1rem 0.4rem; border-radius: 9999px; background: rgba(255,255,255,0.05); color: #fff;">Checking...</span>
-                            </div>
-                            <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.35rem; line-height: 1.4;">
-                                📁 Path: <span id="settingsComfyPathText" style="font-family: monospace; color: #fff; word-break: break-all;">Checking...</span><br>
-                                💻 Version Commit: <span id="settingsComfyCommitText" style="font-family: monospace; color: #fff;">Checking...</span>
-                            </div>
-                        </div>
-                        <button class="aspect-btn" id="settingsComfyUpdateBtn" style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.75rem; white-space: nowrap;" onclick="triggerComfyUpdate()" disabled>Update Engine</button>
-                    </div>
-                    
-                    <div id="settingsComfyProgressArea" style="display: none; flex-direction: column; gap: 0.5rem; margin-top: 0.25rem;">
-                        <div style="display: flex; justify-content: space-between; font-size: 0.75rem;">
-                            <span id="settingsComfyInstallStep" style="color: var(--accent-teal); font-weight: 600;">Updating...</span>
-                            <span id="settingsComfyInstallPct" style="color: #fff;">0%</span>
-                        </div>
-                        <div style="width: 100%; height: 5px; background: rgba(255,255,255,0.05); border-radius: 2.5px; overflow: hidden; position: relative;">
-                            <div id="settingsComfyProgressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, var(--accent-indigo), var(--accent-teal)); transition: width 0.3s ease;"></div>
-                        </div>
-                    </div>
-                    <div class="input-group">
-                        <label class="input-label">ComfyUI Custom Path</label>
-                        <div class="path-picker-row">
-                            <input type="text" id="settingsComfyPath" class="path-picker-input" readonly data-picker-kind="directory" data-picker-title="Select ComfyUI folder">
-                            <button class="aspect-btn path-picker-btn" type="button" onclick="browseForPath('settingsComfyPath')">Browse</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="param-row">
-                    <div class="input-group">
-                        <label class="input-label">Conditional UNet</label>
-                        <div class="path-picker-row">
-                            <input type="text" id="settingsMainModel" class="path-picker-input" readonly data-picker-kind="file" data-picker-title="Select conditional UNet file" data-picker-filter="safetensors">
-                            <button class="aspect-btn path-picker-btn" type="button" onclick="browseForPath('settingsMainModel')">Browse</button>
-                        </div>
-                        <div style="font-size: 0.7rem; margin-top: 0.15rem;">
-                            <a href="https://huggingface.co/bertbobson/Ideogram-4-INT8-ConvRot/resolve/main/ideogram4-int8-ConvRot.safetensors?download=true" target="_blank" style="color: var(--accent-teal); text-decoration: none;">Download Conditional UNet 📥</a>
-                        </div>
-                    </div>
-                    <div class="input-group">
-                        <label class="input-label">Unconditional UNet</label>
-                        <div class="path-picker-row">
-                            <input type="text" id="settingsUncondModel" class="path-picker-input" readonly data-picker-kind="file" data-picker-title="Select unconditional UNet file" data-picker-filter="safetensors">
-                            <button class="aspect-btn path-picker-btn" type="button" onclick="browseForPath('settingsUncondModel')">Browse</button>
-                        </div>
-                        <div style="font-size: 0.7rem; margin-top: 0.15rem;">
-                            <a href="https://huggingface.co/bertbobson/Ideogram-4-INT8-ConvRot/resolve/main/ideogram4-unconditional-int8-ConvRot.safetensors?download=true" target="_blank" style="color: var(--accent-teal); text-decoration: none;">Download Unconditional UNet 📥</a>
-                        </div>
-                    </div>
-                </div>
-                <div class="input-group">
-                    <label class="input-label">Text Encoder</label>
-                    <div class="path-picker-row">
-                        <input type="text" id="settingsTextEncoder" class="path-picker-input" readonly data-picker-kind="file" data-picker-title="Select text encoder file" data-picker-filter="safetensors">
-                        <button class="aspect-btn path-picker-btn" type="button" onclick="browseForPath('settingsTextEncoder')">Browse</button>
-                    </div>
-                    <div style="font-size: 0.7rem; margin-top: 0.15rem;">
-                        <a href="https://huggingface.co/Comfy-Org/Ideogram-4/resolve/main/text_encoders/qwen3vl_8b_fp8_scaled.safetensors?download=true" target="_blank" style="color: var(--accent-teal); text-decoration: none;">Download Text Encoder (Qwen-3VL FP8) 📥</a>
-                    </div>
-                </div>
-                <div class="input-group">
-                    <label class="input-label">VAE</label>
-                    <div class="path-picker-row">
-                        <input type="text" id="settingsVae" class="path-picker-input" readonly data-picker-kind="file" data-picker-title="Select VAE file" data-picker-filter="safetensors">
-                        <button class="aspect-btn path-picker-btn" type="button" onclick="browseForPath('settingsVae')">Browse</button>
-                    </div>
-                    <div style="font-size: 0.7rem; margin-top: 0.15rem;">
-                        <a href="https://huggingface.co/Comfy-Org/flux2-dev/resolve/main/split_files/vae/flux2-vae.safetensors?download=true" target="_blank" style="color: var(--accent-teal); text-decoration: none;">Download Flux VAE 📥</a>
-                    </div>
-                </div>
-                <div class="input-group">
-                    <label class="input-label">Output Directory Path</label>
-                    <div class="path-picker-row">
-                        <input type="text" id="settingsOutputPath" class="path-picker-input" readonly data-picker-kind="directory" data-picker-title="Select output directory">
-                        <button class="aspect-btn path-picker-btn" type="button" onclick="browseForPath('settingsOutputPath')">Browse</button>
-                    </div>
-                </div>
-                <div class="param-row">
-                    <div class="input-group">
-                        <label class="input-label">Device</label>
-                        <input type="text" id="settingsDevice">
-                    </div>
-                    <div class="input-group">
-                        <label class="input-label">API Port</label>
-                        <input type="number" id="settingsPort">
-                    </div>
-                </div>
-            </div>
-
-            <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1rem;">
-                <button class="aspect-btn" style="width: 100px;" onclick="closeSettingsModal()">Cancel</button>
-                <button class="generate-btn" style="width: 180px; font-size: 0.9rem; padding: 0.5rem 1rem;" onclick="saveSettingsFromModal()">Save & Apply</button>
-            </div>
+    <div id="settingsModal" class="wizard-overlay" style="display: none" onclick="closeSettingsModal()">
+      <div class="wizard-card" onclick="event.stopPropagation()">
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 0.75rem;
+          "
+        >
+          <h2 style="font-family: var(--font-display); font-size: 1.4rem; color: #ffffff">System Settings Control Center</h2>
+          <button
+            class="aspect-btn"
+            style="width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; font-size: 0.85rem"
+            onclick="closeSettingsModal()"
+          >
+            ✕
+          </button>
         </div>
+
+        <div style="display: flex; flex-direction: column; gap: 0.85rem; max-height: 60vh; overflow-y: auto; padding-right: 0.5rem; margin-top: 0.5rem">
+          <!-- ComfyUI Engine Manager Section -->
+          <div
+            style="
+              background: rgba(255, 255, 255, 0.02);
+              border: 1px solid rgba(255, 255, 255, 0.05);
+              border-radius: 16px;
+              padding: 1.25rem;
+              display: flex;
+              flex-direction: column;
+              gap: 0.75rem;
+            "
+          >
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem">
+              <div>
+                <div style="font-weight: 700; font-size: 0.95rem; color: #fff; display: flex; align-items: center; gap: 0.4rem">
+                  <span>🤖 ComfyUI Core Engine</span>
+                  <span
+                    id="settingsComfyStatusBadge"
+                    class="status-badge"
+                    style="font-size: 0.65rem; padding: 0.1rem 0.4rem; border-radius: 9999px; background: rgba(255, 255, 255, 0.05); color: #fff"
+                    >Checking...</span
+                  >
+                </div>
+                <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.35rem; line-height: 1.4">
+                  📁 Path: <span id="settingsComfyPathText" style="font-family: monospace; color: #fff; word-break: break-all">Checking...</span><br />
+                  💻 Version Commit: <span id="settingsComfyCommitText" style="font-family: monospace; color: #fff">Checking...</span>
+                </div>
+              </div>
+              <button
+                class="aspect-btn"
+                id="settingsComfyUpdateBtn"
+                style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.75rem; white-space: nowrap"
+                onclick="triggerComfyUpdate()"
+                disabled
+              >
+                Update Engine
+              </button>
+            </div>
+
+            <div id="settingsComfyProgressArea" style="display: none; flex-direction: column; gap: 0.5rem; margin-top: 0.25rem">
+              <div style="display: flex; justify-content: space-between; font-size: 0.75rem">
+                <span id="settingsComfyInstallStep" style="color: var(--accent-teal); font-weight: 600">Updating...</span>
+                <span id="settingsComfyInstallPct" style="color: #fff">0%</span>
+              </div>
+              <div style="width: 100%; height: 5px; background: rgba(255, 255, 255, 0.05); border-radius: 2.5px; overflow: hidden; position: relative">
+                <div
+                  id="settingsComfyProgressBar"
+                  style="width: 0%; height: 100%; background: linear-gradient(90deg, var(--accent-indigo), var(--accent-teal)); transition: width 0.3s ease"
+                ></div>
+              </div>
+            </div>
+            <div class="input-group">
+              <label class="input-label">ComfyUI Custom Path</label>
+              <div class="path-picker-row">
+                <input
+                  type="text"
+                  id="settingsComfyPath"
+                  class="path-picker-input"
+                  readonly
+                  data-picker-kind="directory"
+                  data-picker-title="Select ComfyUI folder"
+                />
+                <button class="aspect-btn path-picker-btn" type="button" onclick="browseForPath('settingsComfyPath')">Browse</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="param-row">
+            <div class="input-group">
+              <label class="input-label">Conditional UNet</label>
+              <div class="path-picker-row">
+                <input
+                  type="text"
+                  id="settingsMainModel"
+                  class="path-picker-input"
+                  readonly
+                  data-picker-kind="file"
+                  data-picker-title="Select conditional UNet file"
+                  data-picker-filter="safetensors"
+                />
+                <button class="aspect-btn path-picker-btn" type="button" onclick="browseForPath('settingsMainModel')">Browse</button>
+              </div>
+              <div style="font-size: 0.7rem; margin-top: 0.15rem">
+                <a
+                  href="https://huggingface.co/bertbobson/Ideogram-4-INT8-ConvRot/resolve/main/ideogram4-int8-ConvRot.safetensors?download=true"
+                  target="_blank"
+                  style="color: var(--accent-teal); text-decoration: none"
+                  >Download Conditional UNet 📥</a
+                >
+              </div>
+            </div>
+            <div class="input-group">
+              <label class="input-label">Unconditional UNet</label>
+              <div class="path-picker-row">
+                <input
+                  type="text"
+                  id="settingsUncondModel"
+                  class="path-picker-input"
+                  readonly
+                  data-picker-kind="file"
+                  data-picker-title="Select unconditional UNet file"
+                  data-picker-filter="safetensors"
+                />
+                <button class="aspect-btn path-picker-btn" type="button" onclick="browseForPath('settingsUncondModel')">Browse</button>
+              </div>
+              <div style="font-size: 0.7rem; margin-top: 0.15rem">
+                <a
+                  href="https://huggingface.co/bertbobson/Ideogram-4-INT8-ConvRot/resolve/main/ideogram4-unconditional-int8-ConvRot.safetensors?download=true"
+                  target="_blank"
+                  style="color: var(--accent-teal); text-decoration: none"
+                  >Download Unconditional UNet 📥</a
+                >
+              </div>
+            </div>
+          </div>
+          <div class="input-group">
+            <label class="input-label">Text Encoder</label>
+            <div class="path-picker-row">
+              <input
+                type="text"
+                id="settingsTextEncoder"
+                class="path-picker-input"
+                readonly
+                data-picker-kind="file"
+                data-picker-title="Select text encoder file"
+                data-picker-filter="safetensors"
+              />
+              <button class="aspect-btn path-picker-btn" type="button" onclick="browseForPath('settingsTextEncoder')">Browse</button>
+            </div>
+            <div style="font-size: 0.7rem; margin-top: 0.15rem">
+              <a
+                href="https://huggingface.co/Comfy-Org/Ideogram-4/resolve/main/text_encoders/qwen3vl_8b_fp8_scaled.safetensors?download=true"
+                target="_blank"
+                style="color: var(--accent-teal); text-decoration: none"
+                >Download Text Encoder (Qwen-3VL FP8) 📥</a
+              >
+            </div>
+          </div>
+          <div class="input-group">
+            <label class="input-label">VAE</label>
+            <div class="path-picker-row">
+              <input
+                type="text"
+                id="settingsVae"
+                class="path-picker-input"
+                readonly
+                data-picker-kind="file"
+                data-picker-title="Select VAE file"
+                data-picker-filter="safetensors"
+              />
+              <button class="aspect-btn path-picker-btn" type="button" onclick="browseForPath('settingsVae')">Browse</button>
+            </div>
+            <div style="font-size: 0.7rem; margin-top: 0.15rem">
+              <a
+                href="https://huggingface.co/Comfy-Org/flux2-dev/resolve/main/split_files/vae/flux2-vae.safetensors?download=true"
+                target="_blank"
+                style="color: var(--accent-teal); text-decoration: none"
+                >Download Flux VAE 📥</a
+              >
+            </div>
+          </div>
+          <div class="input-group">
+            <label class="input-label">Output Directory Path</label>
+            <div class="path-picker-row">
+              <input
+                type="text"
+                id="settingsOutputPath"
+                class="path-picker-input"
+                readonly
+                data-picker-kind="directory"
+                data-picker-title="Select output directory"
+              />
+              <button class="aspect-btn path-picker-btn" type="button" onclick="browseForPath('settingsOutputPath')">Browse</button>
+            </div>
+          </div>
+          <div class="param-row">
+            <div class="input-group">
+              <label class="input-label">Device</label>
+              <input type="text" id="settingsDevice" />
+            </div>
+            <div class="input-group">
+              <label class="input-label">API Port</label>
+              <input type="number" id="settingsPort" />
+            </div>
+          </div>
+        </div>
+
+        <div
+          style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1rem; border-top: 1px solid rgba(255, 255, 255, 0.05); padding-top: 1rem"
+        >
+          <button class="aspect-btn" style="width: 100px" onclick="closeSettingsModal()">Cancel</button>
+          <button class="generate-btn" style="width: 180px; font-size: 0.9rem; padding: 0.5rem 1rem" onclick="saveSettingsFromModal()">Save & Apply</button>
+        </div>
+      </div>
     </div>
 
     <script>
-        const API_URL = ""; // Empty string for same-host routing
-        let currentPromptMode = "plain";
-        let activePreset = "default";
-        let activeRatio = "1_1";
-        let isGenerating = false;
-        let wizardCurrentStep = 1;
+      const API_URL = ""; // Empty string for same-host routing
+      let currentPromptMode = "plain";
+      let activePreset = "default";
+      let activeRatio = "1_1";
+      let isGenerating = false;
+      let wizardCurrentStep = 1;
+      let hasInitializedJsonMode = false;
 
-        const JSON_TEMPLATES = {
-            typography: `{
-  "prompt": "Bold dynamic typography saying 'CREATIVE FORCE'",
-  "style": "Graphic design poster",
-  "aspect_ratio": "1:1",
-  "colors": ["#f43f5e", "#10b981", "#ffffff"],
-  "overlay_texture": "grunge grain overlay"
-}`,
-            sticker: `{
-  "prompt": "A cute cartoon baby dragon breathing small blue fire bubbles",
-  "style": "Sticker mockup with thick white border",
-  "rendering": "clean vectors, 3D clay look",
-  "background": "isolated transparent background"
-}`,
-            concept: `{
-  "prompt": "A majestic cybercity surrounded by high glowing mountains during sunset",
-  "style": "Concept art digital painting",
-  "lighting": "neon accent glow, volumetric fog",
-  "camera": "ultra wide shot, high altitude drone perspective"
-}`
+      // Initialize connection diagnostics
+      document.addEventListener("DOMContentLoaded", () => {
+        checkBackendHealth();
+        fetchHistory();
+        setupPathPickerInputs();
+
+        // Periodically check connection status
+        setInterval(checkBackendHealth, 5000);
+      });
+
+      function setupPathPickerInputs() {
+        document.querySelectorAll(".path-picker-input").forEach((input) => {
+          input.addEventListener("click", () => browseForPath(input.id));
+          input.title = "Click to browse";
+        });
+      }
+
+      function getPathDir(path) {
+        if (!path) return "";
+        const normalized = path.replace(/\\/g, "/");
+        const lastSlash = normalized.lastIndexOf("/");
+        return lastSlash > -1 ? normalized.slice(0, lastSlash) : "";
+      }
+
+      function getPathName(path) {
+        if (!path) return "";
+        const normalized = path.replace(/\\/g, "/");
+        const lastSlash = normalized.lastIndexOf("/");
+        return lastSlash > -1 ? normalized.slice(lastSlash + 1) : normalized;
+      }
+
+      function setComfyModelDefaults(prefix, comfyPath) {
+        const normalizedBase = comfyPath.replace(/\\/g, "/").replace(/\/$/, "");
+        const diffusionPath = `${normalizedBase}/models/diffusion_models`;
+        document.getElementById(prefix === "wizard" ? "wizardMainModel" : "settingsMainModel").value = `${diffusionPath}/ideogram4-int8-ConvRot.safetensors`;
+        document.getElementById(prefix === "wizard" ? "wizardUncondModel" : "settingsUncondModel").value =
+          `${diffusionPath}/ideogram4-unconditional-int8-ConvRot.safetensors`;
+        document.getElementById(prefix === "wizard" ? "wizardTextEncoder" : "settingsTextEncoder").value =
+          `${normalizedBase}/models/text_encoders/qwen3vl_8b_fp8_scaled.safetensors`;
+        document.getElementById(prefix === "wizard" ? "wizardVae" : "settingsVae").value = `${normalizedBase}/models/vae/flux2-vae.safetensors`;
+      }
+
+      function getPickerInitialPath(input) {
+        const currentValue = input.value.trim();
+        if (input.dataset.pickerKind === "directory") return currentValue || "";
+        const currentDir = getPathDir(currentValue);
+        if (currentDir) return currentDir;
+        return "";
+      }
+
+      function applyPickedPathSideEffects(inputId, selectedPath) {
+        const normalized = selectedPath.replace(/\\/g, "/");
+        if (inputId === "wizardComfyPath" || inputId === "settingsComfyPath") {
+          const prefix = inputId.startsWith("wizard") ? "wizard" : "settings";
+          setComfyModelDefaults(prefix, normalized);
+        }
+      }
+
+      async function browseForPath(inputId) {
+        const input = document.getElementById(inputId);
+        if (!input) return;
+
+        try {
+          const filetypes =
+            input.dataset.pickerFilter === "safetensors"
+              ? [
+                  ["Safetensors models", "*.safetensors"],
+                  ["All files", "*.*"],
+                ]
+              : [["All files", "*.*"]];
+
+          const res = await fetch(`${API_URL}/api/browse-path`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              kind: input.dataset.pickerKind || "file",
+              title: input.dataset.pickerTitle || "Select path",
+              initial_path: getPickerInitialPath(input),
+              filetypes,
+            }),
+          });
+
+          if (!res.ok) throw new Error("Unable to open the native path picker");
+          const data = await res.json();
+          if (data.selected && data.path) {
+            input.value = data.path;
+            applyPickedPathSideEffects(inputId, data.path);
+          }
+        } catch (e) {
+          alert(`Path selection failed: ${e.message}`);
+        }
+      }
+
+      async function checkBackendHealth() {
+        if (isGenerating) return; // Don't interrupt health checks during generation
+
+        try {
+          const res = await fetch(`${API_URL}/api/health`);
+          if (!res.ok) throw new Error("API Offline");
+          const data = await res.json();
+
+          // Update status badge
+          const dot = document.getElementById("backendStatusDot");
+          const txt = document.getElementById("backendStatusText");
+          dot.className = "status-dot online";
+          txt.textContent = "Engine Connected";
+
+          // Update diagnostics panel
+          document.getElementById("diagGpu").textContent = data.gpu_name || "CPU (Fallback)";
+          document.getElementById("diagCuda").textContent = data.cuda_available ? "Enabled" : "Not Found";
+          document.getElementById("diagVram").textContent = data.vram_total ? `${data.vram_total} GB` : "N/A";
+          document.getElementById("diagEngine").textContent = data.selected_runtime;
+
+          // Handle setup wizard trigger if engine is not configured
+          if (data.status === "not_configured") {
+            showSetupWizard();
+          } else {
+            hideSetupWizard();
+          }
+        } catch (err) {
+          const dot = document.getElementById("backendStatusDot");
+          const txt = document.getElementById("backendStatusText");
+          dot.className = "status-dot";
+          txt.textContent = "Backend Offline";
+
+          document.getElementById("diagGpu").textContent = "N/A";
+          document.getElementById("diagCuda").textContent = "Offline";
+          document.getElementById("diagVram").textContent = "N/A";
+          document.getElementById("diagEngine").textContent = "N/A";
+        }
+      }
+
+      function setPromptMode(mode) {
+        currentPromptMode = mode;
+        document.getElementById("modePlain").classList.toggle("active", mode === "plain");
+        document.getElementById("modeJson").classList.toggle("active", mode === "json");
+
+        const promptInput = document.getElementById("promptInput");
+
+        if (mode === "json") {
+          promptInput.placeholder = "Enter structured JSON configuration...";
+          if (!hasInitializedJsonMode && (!promptInput.value.trim() || !promptInput.value.startsWith("{"))) {
+            promptInput.value = `{\n  "prompt": "Bold dynamic typography saying 'CREATIVE FORCE'",\n  "style": "Graphic design poster",\n  "aspect_ratio": "1:1",\n  "colors": ["#f43f5e", "#10b981", "#ffffff"],\n  "overlay_texture": "grunge grain overlay"\n}`;
+            hasInitializedJsonMode = true;
+          }
+        } else {
+          promptInput.placeholder = "Describe the image you want to create...";
+          try {
+            const parsed = JSON.parse(promptInput.value);
+            if (parsed && parsed.prompt) {
+              promptInput.value = parsed.prompt;
+            }
+          } catch (e) {}
+        }
+      }
+
+      function selectPreset(preset) {
+        activePreset = preset;
+        document.querySelectorAll(".preset-card").forEach((el) => el.classList.remove("active"));
+        document.getElementById(`preset_${preset}`).classList.add("active");
+      }
+
+      function setAspectRatio(w, h, ratioKey) {
+        activeRatio = ratioKey;
+        document.querySelectorAll(".aspect-btn").forEach((el) => el.classList.remove("active"));
+        document.getElementById(`ratio_${ratioKey}`).classList.add("active");
+
+        document.getElementById("widthInput").value = w;
+        document.getElementById("heightInput").value = h;
+      }
+
+      function toggleAccordion() {
+        const header = document.getElementById("advAccordionHeader");
+        const content = document.getElementById("advAccordionContent");
+        header.classList.toggle("open");
+        content.classList.toggle("open");
+      }
+
+      // Live progress bar update
+      function updateProgressUI(pct, step, total, elapsed, remaining) {
+        document.getElementById("progressPctText").textContent = `${pct}%`;
+        document.getElementById("progressBarFill").style.width = `${pct}%`;
+        document.getElementById("progressStepText").textContent = `${step} / ${total}`;
+        document.getElementById("progressElapsedText").textContent = `${elapsed}s`;
+        document.getElementById("progressRemainingText").textContent = remaining > 0 ? `${remaining}s` : "estimating...";
+      }
+
+      async function pollProgress() {
+        try {
+          const res = await fetch(`${API_URL}/api/progress`);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.active) {
+              updateProgressUI(data.percentage, data.current_step, data.total_steps, data.elapsed_time, data.estimated_time_remaining);
+            }
+          }
+        } catch (e) {
+          console.error("Error fetching progress telemetry:", e);
+        }
+      }
+
+      async function triggerGeneration() {
+        if (isGenerating) return;
+
+        const prompt = document.getElementById("promptInput").value.trim();
+        if (!prompt) {
+          alert("Please enter a description prompt before generating!");
+          return;
+        }
+
+        const button = document.getElementById("generateButton");
+        const placeholder = document.getElementById("previewPlaceholder");
+        const previewImg = document.getElementById("previewImg");
+        const progressOverlay = document.getElementById("progressOverlay");
+
+        // UI feedback state
+        isGenerating = true;
+        button.disabled = true;
+        button.textContent = "Processing Job...";
+        placeholder.style.display = "none";
+        previewImg.classList.remove("loaded");
+        progressOverlay.style.display = "flex";
+
+        // Initialize progress UI
+        updateProgressUI(0, 0, 0, 0.0, 0.0);
+
+        // Start polling progress bar
+        const progressInterval = setInterval(pollProgress, 500);
+
+        // Collect parameters
+        const width = parseInt(document.getElementById("widthInput").value) || 1024;
+        const height = parseInt(document.getElementById("heightInput").value) || 1024;
+        const seedVal = document.getElementById("seedInput").value.trim();
+        const seed = seedVal ? parseInt(seedVal) : null;
+
+        const stepsVal = document.getElementById("overrideSteps").value;
+        const muVal = document.getElementById("overrideMu").value;
+        const stdVal = document.getElementById("overrideStd").value;
+
+        const payload = {
+          prompt: prompt,
+          json_mode: currentPromptMode === "json",
+          preset: activePreset,
+          width: width,
+          height: height,
+          seed: seed,
+          steps: stepsVal ? parseInt(stepsVal) : null,
+          mu: muVal ? parseFloat(muVal) : null,
+          std: stdVal ? parseFloat(stdVal) : null,
         };
 
-        // Initialize connection diagnostics
-        document.addEventListener("DOMContentLoaded", () => {
-            checkBackendHealth();
-            fetchHistory();
-            setupPathPickerInputs();
-            
-            // Periodically check connection status
-            setInterval(checkBackendHealth, 5000);
-        });
+        try {
+          const res = await fetch(`${API_URL}/api/generate`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
 
-        function setupPathPickerInputs() {
-            document.querySelectorAll(".path-picker-input").forEach((input) => {
-                input.addEventListener("click", () => browseForPath(input.id));
-                input.title = "Click to browse";
-            });
-        }
+          clearInterval(progressInterval);
+          progressOverlay.style.display = "none";
 
-        function getPathDir(path) {
-            if (!path) return "";
-            const normalized = path.replace(/\\/g, "/");
-            const lastSlash = normalized.lastIndexOf("/");
-            return lastSlash > -1 ? normalized.slice(0, lastSlash) : "";
-        }
+          if (!res.ok) {
+            const errData = await res.json();
+            throw new Error(errData.detail || "Backend failed execution");
+          }
 
-        function getPathName(path) {
-            if (!path) return "";
-            const normalized = path.replace(/\\/g, "/");
-            const lastSlash = normalized.lastIndexOf("/");
-            return lastSlash > -1 ? normalized.slice(lastSlash + 1) : normalized;
-        }
+          const data = await res.json();
 
-        function setComfyModelDefaults(prefix, comfyPath) {
-            const normalizedBase = comfyPath.replace(/\\/g, "/").replace(/\/$/, "");
-            const diffusionPath = `${normalizedBase}/models/diffusion_models`;
-            document.getElementById(prefix === "wizard" ? "wizardMainModel" : "settingsMainModel").value = `${diffusionPath}/ideogram4-int8-ConvRot.safetensors`;
-            document.getElementById(prefix === "wizard" ? "wizardUncondModel" : "settingsUncondModel").value = `${diffusionPath}/ideogram4-unconditional-int8-ConvRot.safetensors`;
-            document.getElementById(prefix === "wizard" ? "wizardTextEncoder" : "settingsTextEncoder").value = `${normalizedBase}/models/text_encoders/qwen3vl_8b_fp8_scaled.safetensors`;
-            document.getElementById(prefix === "wizard" ? "wizardVae" : "settingsVae").value = `${normalizedBase}/models/vae/flux2-vae.safetensors`;
-        }
-
-        function getPickerInitialPath(input) {
-            const currentValue = input.value.trim();
-            if (input.dataset.pickerKind === "directory") return currentValue || "";
-            const currentDir = getPathDir(currentValue);
-            if (currentDir) return currentDir;
-            return "";
-        }
-
-        function applyPickedPathSideEffects(inputId, selectedPath) {
-            const normalized = selectedPath.replace(/\\/g, "/");
-            if (inputId === "wizardComfyPath" || inputId === "settingsComfyPath") {
-                const prefix = inputId.startsWith("wizard") ? "wizard" : "settings";
-                setComfyModelDefaults(prefix, normalized);
-            }
-        }
-
-        async function browseForPath(inputId) {
-            const input = document.getElementById(inputId);
-            if (!input) return;
-
-            try {
-                const filetypes = input.dataset.pickerFilter === "safetensors"
-                    ? [["Safetensors models", "*.safetensors"], ["All files", "*.*"]]
-                    : [["All files", "*.*"]];
-
-                const res = await fetch(`${API_URL}/api/browse-path`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        kind: input.dataset.pickerKind || "file",
-                        title: input.dataset.pickerTitle || "Select path",
-                        initial_path: getPickerInitialPath(input),
-                        filetypes
-                    })
-                });
-
-                if (!res.ok) throw new Error("Unable to open the native path picker");
-                const data = await res.json();
-                if (data.selected && data.path) {
-                    input.value = data.path;
-                    applyPickedPathSideEffects(inputId, data.path);
-                }
-            } catch (e) {
-                alert(`Path selection failed: ${e.message}`);
-            }
-        }
-
-        async function checkBackendHealth() {
-            if (isGenerating) return; // Don't interrupt health checks during generation
-            
-            try {
-                const res = await fetch(`${API_URL}/api/health`);
-                if (!res.ok) throw new Error("API Offline");
-                const data = await res.json();
-                
-                // Update status badge
-                const dot = document.getElementById("backendStatusDot");
-                const txt = document.getElementById("backendStatusText");
-                dot.className = "status-dot online";
-                txt.textContent = "Engine Connected";
-                
-                // Update diagnostics panel
-                document.getElementById("diagGpu").textContent = data.gpu_name || "CPU (Fallback)";
-                document.getElementById("diagCuda").textContent = data.cuda_available ? "Enabled" : "Not Found";
-                document.getElementById("diagVram").textContent = data.vram_total ? `${data.vram_total} GB` : "N/A";
-                document.getElementById("diagEngine").textContent = data.selected_runtime;
-
-                // Handle setup wizard trigger if engine is not configured
-                if (data.status === "not_configured") {
-                    showSetupWizard();
-                } else {
-                    hideSetupWizard();
-                }
-            } catch (err) {
-                const dot = document.getElementById("backendStatusDot");
-                const txt = document.getElementById("backendStatusText");
-                dot.className = "status-dot";
-                txt.textContent = "Backend Offline";
-                
-                document.getElementById("diagGpu").textContent = "N/A";
-                document.getElementById("diagCuda").textContent = "Offline";
-                document.getElementById("diagVram").textContent = "N/A";
-                document.getElementById("diagEngine").textContent = "N/A";
-            }
-        }
-
-        function setPromptMode(mode) {
-            currentPromptMode = mode;
-            document.getElementById("modePlain").classList.toggle("active", mode === 'plain');
-            document.getElementById("modeJson").classList.toggle("active", mode === 'json');
-            
-            const templateBar = document.getElementById("templateBar");
-            const promptInput = document.getElementById("promptInput");
-            
-            if (mode === 'json') {
-                templateBar.style.display = "flex";
-                promptInput.placeholder = "Enter structured JSON configuration...";
-                if (!promptInput.value.trim() || !promptInput.value.startsWith("{")) {
-                    applyTemplate('typography');
-                }
-            } else {
-                templateBar.style.display = "none";
-                promptInput.placeholder = "Describe the image you want to create...";
-                try {
-                    const parsed = JSON.parse(promptInput.value);
-                    if (parsed && parsed.prompt) {
-                        promptInput.value = parsed.prompt;
-                    }
-                } catch(e) {}
-            }
-        }
-
-        function applyTemplate(key) {
-            if (JSON_TEMPLATES[key]) {
-                document.getElementById("promptInput").value = JSON_TEMPLATES[key];
-            }
-        }
-
-        function selectPreset(preset) {
-            activePreset = preset;
-            document.querySelectorAll(".preset-card").forEach(el => el.classList.remove("active"));
-            document.getElementById(`preset_${preset}`).classList.add("active");
-        }
-
-        function setAspectRatio(w, h, ratioKey) {
-            activeRatio = ratioKey;
-            document.querySelectorAll(".aspect-btn").forEach(el => el.classList.remove("active"));
-            document.getElementById(`ratio_${ratioKey}`).classList.add("active");
-            
-            document.getElementById("widthInput").value = w;
-            document.getElementById("heightInput").value = h;
-        }
-
-        function toggleAccordion() {
-            const header = document.getElementById("advAccordionHeader");
-            const content = document.getElementById("advAccordionContent");
-            header.classList.toggle("open");
-            content.classList.toggle("open");
-        }
-
-        // Live progress bar update
-        function updateProgressUI(pct, step, total, elapsed, remaining) {
-            document.getElementById("progressPctText").textContent = `${pct}%`;
-            document.getElementById("progressBarFill").style.width = `${pct}%`;
-            document.getElementById("progressStepText").textContent = `${step} / ${total}`;
-            document.getElementById("progressElapsedText").textContent = `${elapsed}s`;
-            document.getElementById("progressRemainingText").textContent = remaining > 0 ? `${remaining}s` : "estimating...";
-        }
-
-        async function pollProgress() {
-            try {
-                const res = await fetch(`${API_URL}/api/progress`);
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data.active) {
-                        updateProgressUI(data.percentage, data.current_step, data.total_steps, data.elapsed_time, data.estimated_time_remaining);
-                    }
-                }
-            } catch (e) {
-                console.error("Error fetching progress telemetry:", e);
-            }
-        }
-
-        async function triggerGeneration() {
-            if (isGenerating) return;
-
-            const prompt = document.getElementById("promptInput").value.trim();
-            if (!prompt) {
-                alert("Please enter a description prompt before generating!");
-                return;
-            }
-
-            const button = document.getElementById("generateButton");
-            const placeholder = document.getElementById("previewPlaceholder");
-            const previewImg = document.getElementById("previewImg");
-            const progressOverlay = document.getElementById("progressOverlay");
-
-            // UI feedback state
-            isGenerating = true;
-            button.disabled = true;
-            button.textContent = "Processing Job...";
-            placeholder.style.display = "none";
-            previewImg.classList.remove("loaded");
-            progressOverlay.style.display = "flex";
-
-            // Initialize progress UI
-            updateProgressUI(0, 0, 0, 0.0, 0.0);
-
-            // Start polling progress bar
-            const progressInterval = setInterval(pollProgress, 500);
-
-            // Collect parameters
-            const width = parseInt(document.getElementById("widthInput").value) || 1024;
-            const height = parseInt(document.getElementById("heightInput").value) || 1024;
-            const seedVal = document.getElementById("seedInput").value.trim();
-            const seed = seedVal ? parseInt(seedVal) : null;
-            
-            const stepsVal = document.getElementById("overrideSteps").value;
-            const muVal = document.getElementById("overrideMu").value;
-            const stdVal = document.getElementById("overrideStd").value;
-            
-            const payload = {
-                prompt: prompt,
-                json_mode: currentPromptMode === 'json',
-                preset: activePreset,
-                width: width,
-                height: height,
-                seed: seed,
-                steps: stepsVal ? parseInt(stepsVal) : null,
-                mu: muVal ? parseFloat(muVal) : null,
-                std: stdVal ? parseFloat(stdVal) : null
-            };
-
-            try {
-                const res = await fetch(`${API_URL}/api/generate`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                
-                clearInterval(progressInterval);
-                progressOverlay.style.display = "none";
-
-                if (!res.ok) {
-                    const errData = await res.json();
-                    throw new Error(errData.detail || "Backend failed execution");
-                }
-                
-                const data = await res.json();
-                
-                if (data.success) {
-                    previewImg.src = `${API_URL}${data.image_url}`;
-                    previewImg.classList.add("loaded");
-                    document.getElementById("seedInput").value = data.seed;
-                    fetchHistory();
-                } else {
-                    alert(`Generation failed: ${data.error || 'Unknown runtime error'}`);
-                    placeholder.style.display = "flex";
-                }
-            } catch (err) {
-                clearInterval(progressInterval);
-                progressOverlay.style.display = "none";
-                alert(`Error executing task: ${err.message}`);
-                placeholder.style.display = "flex";
-            } finally {
-                isGenerating = false;
-                button.disabled = false;
-                button.textContent = "Generate Image";
-            }
-        }
-
-        async function fetchHistory() {
-            try {
-                const res = await fetch(`${API_URL}/api/history`);
-                const history = await res.json();
-                
-                const countLabel = document.getElementById("historyCount");
-                countLabel.textContent = `${history.length} Jobs`;
-                
-                const grid = document.getElementById("historyGrid");
-                grid.innerHTML = "";
-                
-                history.forEach(item => {
-                    const card = document.createElement("div");
-                    card.className = "history-card";
-                    card.title = `Prompt: ${item.prompt.substring(0, 100)}...`;
-                    card.onclick = () => loadHistoryItem(item);
-                    
-                    const img = document.createElement("img");
-                    img.src = `${API_URL}${item.image_url}`;
-                    
-                    card.appendChild(img);
-                    grid.appendChild(card);
-                });
-            } catch (err) {
-                console.error("Error loading historical entries:", err);
-            }
-        }
-
-        function loadHistoryItem(item) {
-            const previewImg = document.getElementById("previewImg");
-            const placeholder = document.getElementById("previewPlaceholder");
-            
-            placeholder.style.display = "none";
-            previewImg.classList.remove("loaded");
-            
-            previewImg.src = `${API_URL}${item.image_url}`;
+          if (data.success) {
+            previewImg.src = `${API_URL}${data.image_url}`;
             previewImg.classList.add("loaded");
-            
-            document.getElementById("promptInput").value = item.prompt;
-            setPromptMode(item.metadata.json_mode ? 'json' : 'plain');
-            selectPreset(item.preset);
-            
-            document.getElementById("widthInput").value = item.width;
-            document.getElementById("heightInput").value = item.height;
-            document.getElementById("seedInput").value = item.seed;
+            document.getElementById("seedInput").value = data.seed;
+            fetchHistory();
+          } else {
+            alert(`Generation failed: ${data.error || "Unknown runtime error"}`);
+            placeholder.style.display = "flex";
+          }
+        } catch (err) {
+          clearInterval(progressInterval);
+          progressOverlay.style.display = "none";
+          alert(`Error executing task: ${err.message}`);
+          placeholder.style.display = "flex";
+        } finally {
+          isGenerating = false;
+          button.disabled = false;
+          button.textContent = "Generate Image";
         }
+      }
 
-        // =====================================================================
-        // SETUP WIZARD & SETTINGS PANEL LOGIC
-        // =====================================================================
+      async function fetchHistory() {
+        try {
+          const res = await fetch(`${API_URL}/api/history`);
+          const history = await res.json();
 
-        function showSetupWizard() {
-            document.getElementById("setupWizardOverlay").style.display = "flex";
-            if (wizardCurrentStep === 1) {
-                loadSettingsIntoWizard();
-            }
+          const countLabel = document.getElementById("historyCount");
+          countLabel.textContent = `${history.length} Jobs`;
+
+          const grid = document.getElementById("historyGrid");
+          grid.innerHTML = "";
+
+          history.forEach((item) => {
+            const card = document.createElement("div");
+            card.className = "history-card";
+            card.title = `Prompt: ${item.prompt.substring(0, 100)}...`;
+            card.onclick = () => loadHistoryItem(item);
+
+            const img = document.createElement("img");
+            img.src = `${API_URL}${item.image_url}`;
+
+            card.appendChild(img);
+            grid.appendChild(card);
+          });
+        } catch (err) {
+          console.error("Error loading historical entries:", err);
         }
+      }
 
-        function hideSetupWizard() {
-            document.getElementById("setupWizardOverlay").style.display = "none";
+      function loadHistoryItem(item) {
+        const previewImg = document.getElementById("previewImg");
+        const placeholder = document.getElementById("previewPlaceholder");
+
+        placeholder.style.display = "none";
+        previewImg.classList.remove("loaded");
+
+        previewImg.src = `${API_URL}${item.image_url}`;
+        previewImg.classList.add("loaded");
+
+        document.getElementById("promptInput").value = item.prompt;
+        setPromptMode(item.metadata.json_mode ? "json" : "plain");
+        selectPreset(item.preset);
+
+        document.getElementById("widthInput").value = item.width;
+        document.getElementById("heightInput").value = item.height;
+        document.getElementById("seedInput").value = item.seed;
+      }
+
+      // =====================================================================
+      // SETUP WIZARD & SETTINGS PANEL LOGIC
+      // =====================================================================
+
+      function showSetupWizard() {
+        document.getElementById("setupWizardOverlay").style.display = "flex";
+        if (wizardCurrentStep === 1) {
+          loadSettingsIntoWizard();
         }
+      }
 
-        let comfyPollInterval = null;
+      function hideSetupWizard() {
+        document.getElementById("setupWizardOverlay").style.display = "none";
+      }
 
-        function toggleManualComfyPath(event) {
-            if (event) event.preventDefault();
-            const container = document.getElementById("comfyManualPathContainer");
-            const toggleBtn = document.getElementById("toggleManualPathBtn");
-            if (container.style.display === "none") {
-                container.style.display = "flex";
-                toggleBtn.textContent = "Hide manual path settings ⚙️";
-            } else {
-                container.style.display = "none";
-                toggleBtn.textContent = "Or specify manual path (Advanced) ⚙️";
-            }
+      let comfyPollInterval = null;
+
+      function toggleManualComfyPath(event) {
+        if (event) event.preventDefault();
+        const container = document.getElementById("comfyManualPathContainer");
+        const toggleBtn = document.getElementById("toggleManualPathBtn");
+        if (container.style.display === "none") {
+          container.style.display = "flex";
+          toggleBtn.textContent = "Hide manual path settings ⚙️";
+        } else {
+          container.style.display = "none";
+          toggleBtn.textContent = "Or specify manual path (Advanced) ⚙️";
         }
+      }
 
-        async function loadSettingsIntoWizard() {
-            try {
-                const res = await fetch(`${API_URL}/api/settings`);
-                if (res.ok) {
-                    const data = await res.json();
-                    let inferredComfy = data.comfyui_path || "";
-                    document.getElementById("wizardComfyPath").value = inferredComfy;
-                    document.getElementById("wizardMainModel").value = data.main_model || "";
-                    document.getElementById("wizardUncondModel").value = data.uncond_model || "";
-                    document.getElementById("wizardTextEncoder").value = data.text_encoder || "";
-                    document.getElementById("wizardVae").value = data.vae || "";
-                }
-                await checkComfyStatus("wizard");
-            } catch (e) {
-                console.error("Failed to load settings configuration:", e);
-            }
+      async function loadSettingsIntoWizard() {
+        try {
+          const res = await fetch(`${API_URL}/api/settings`);
+          if (res.ok) {
+            const data = await res.json();
+            let inferredComfy = data.comfyui_path || "";
+            document.getElementById("wizardComfyPath").value = inferredComfy;
+            document.getElementById("wizardMainModel").value = data.main_model || "";
+            document.getElementById("wizardUncondModel").value = data.uncond_model || "";
+            document.getElementById("wizardTextEncoder").value = data.text_encoder || "";
+            document.getElementById("wizardVae").value = data.vae || "";
+          }
+          await checkComfyStatus("wizard");
+        } catch (e) {
+          console.error("Failed to load settings configuration:", e);
         }
+      }
 
-        async function checkComfyStatus(mode = "wizard") {
-            try {
-                const res = await fetch(`${API_URL}/api/comfy/status`);
-                if (res.ok) {
-                    const status = await res.json();
-                    updateComfyStatusUI(status, mode);
-                    
-                    if (status.is_installing && !comfyPollInterval) {
-                        startComfyPolling(mode);
-                    }
-                }
-            } catch (e) {
-                console.error("Failed to check ComfyUI engine status:", e);
+      async function checkComfyStatus(mode = "wizard") {
+        try {
+          const res = await fetch(`${API_URL}/api/comfy/status`);
+          if (res.ok) {
+            const status = await res.json();
+            updateComfyStatusUI(status, mode);
+
+            if (status.is_installing && !comfyPollInterval) {
+              startComfyPolling(mode);
             }
+          }
+        } catch (e) {
+          console.error("Failed to check ComfyUI engine status:", e);
         }
+      }
 
-        function updateComfyStatusUI(status, mode) {
-            const isWizard = (mode === "wizard");
-            
-            const badge = document.getElementById(isWizard ? "comfyInstallBadge" : "settingsComfyStatusBadge");
-            const btn = document.getElementById(isWizard ? "comfyInstallBtn" : "settingsComfyUpdateBtn");
-            const progArea = document.getElementById(isWizard ? "comfyInstallProgressArea" : "settingsComfyProgressArea");
-            const progBar = document.getElementById(isWizard ? "comfyInstallProgressBar" : "settingsComfyProgressBar");
-            const stepText = document.getElementById(isWizard ? "comfyInstallStep" : "settingsComfyInstallStep");
-            const pctText = document.getElementById(isWizard ? "comfyInstallPct" : "settingsComfyInstallPct");
-            
-            if (status.installed) {
-                badge.textContent = "Installed";
-                badge.style.background = "rgba(45, 212, 191, 0.1)";
-                badge.style.color = "var(--accent-teal)";
-                badge.style.border = "1px solid rgba(45, 212, 191, 0.2)";
-                
-                if (isWizard) {
-                    btn.textContent = "Installed ✓";
-                    btn.disabled = true;
-                    btn.style.background = "rgba(45, 212, 191, 0.2)";
-                } else {
-                    if (status.local_commit !== "N/A" && status.local_commit !== "ZIP-installed") {
-                        if (status.update_available) {
-                            badge.textContent = "Update Available";
-                            badge.style.background = "rgba(245, 158, 11, 0.1)";
-                            badge.style.color = "#f59e0b";
-                            badge.style.border = "1px solid rgba(245, 158, 11, 0.2)";
-                            btn.disabled = false;
-                        } else {
-                            btn.disabled = true;
-                            btn.textContent = "Up to Date";
-                        }
-                    } else {
-                        btn.disabled = false;
-                        btn.textContent = "Update Engine";
-                    }
-                }
-            } else {
-                badge.textContent = "Not Installed";
-                badge.style.background = "rgba(239, 68, 68, 0.1)";
-                badge.style.color = "#ef4444";
-                badge.style.border = "1px solid rgba(239, 68, 68, 0.2)";
-                
-                if (isWizard) {
-                    btn.textContent = "Install Now";
-                    btn.disabled = status.is_installing;
-                }
-            }
+      function updateComfyStatusUI(status, mode) {
+        const isWizard = mode === "wizard";
 
-            if (!isWizard) {
-                document.getElementById("settingsComfyPath").value = status.install_path || "";
-                document.getElementById("settingsComfyPathText").textContent = status.install_path || "N/A";
-                document.getElementById("settingsComfyCommitText").textContent = status.local_commit || "N/A";
-            }
+        const badge = document.getElementById(isWizard ? "comfyInstallBadge" : "settingsComfyStatusBadge");
+        const btn = document.getElementById(isWizard ? "comfyInstallBtn" : "settingsComfyUpdateBtn");
+        const progArea = document.getElementById(isWizard ? "comfyInstallProgressArea" : "settingsComfyProgressArea");
+        const progBar = document.getElementById(isWizard ? "comfyInstallProgressBar" : "settingsComfyProgressBar");
+        const stepText = document.getElementById(isWizard ? "comfyInstallStep" : "settingsComfyInstallStep");
+        const pctText = document.getElementById(isWizard ? "comfyInstallPct" : "settingsComfyInstallPct");
 
-            if (status.is_installing) {
-                progArea.style.display = "flex";
+        if (status.installed) {
+          badge.textContent = "Installed";
+          badge.style.background = "rgba(45, 212, 191, 0.1)";
+          badge.style.color = "var(--accent-teal)";
+          badge.style.border = "1px solid rgba(45, 212, 191, 0.2)";
+
+          if (isWizard) {
+            btn.textContent = "Installed ✓";
+            btn.disabled = true;
+            btn.style.background = "rgba(45, 212, 191, 0.2)";
+          } else {
+            if (status.local_commit !== "N/A" && status.local_commit !== "ZIP-installed") {
+              if (status.update_available) {
+                badge.textContent = "Update Available";
+                badge.style.background = "rgba(245, 158, 11, 0.1)";
+                badge.style.color = "#f59e0b";
+                badge.style.border = "1px solid rgba(245, 158, 11, 0.2)";
+                btn.disabled = false;
+              } else {
                 btn.disabled = true;
-                
-                const pct = Math.round(status.install_progress * 100);
-                progBar.style.width = `${pct}%`;
-                pctText.textContent = `${pct}%`;
-                stepText.textContent = `${status.install_step}: ${status.status_message}`;
-                
-                if (isWizard) {
-                    const logs = document.getElementById("comfyInstallLogs");
-                    if (logs) {
-                        logs.textContent = `[${status.install_step}] ${status.status_message}`;
-                    }
-                }
+                btn.textContent = "Up to Date";
+              }
             } else {
-                progArea.style.display = "none";
-                
-                if (comfyPollInterval) {
-                    clearInterval(comfyPollInterval);
-                    comfyPollInterval = null;
-                    
-                    if (isWizard && status.installed) {
-                        loadSettingsIntoWizard();
-                    } else if (!isWizard) {
-                        // Refresh settings modal fields
-                        document.getElementById("settingsComfyPath").value = status.install_path || "";
-                        document.getElementById("settingsComfyPathText").textContent = status.install_path || "N/A";
-                        if (status.install_path) setComfyModelDefaults("settings", status.install_path);
-                    }
-                }
+              btn.disabled = false;
+              btn.textContent = "Update Engine";
             }
+          }
+        } else {
+          badge.textContent = "Not Installed";
+          badge.style.background = "rgba(239, 68, 68, 0.1)";
+          badge.style.color = "#ef4444";
+          badge.style.border = "1px solid rgba(239, 68, 68, 0.2)";
+
+          if (isWizard) {
+            btn.textContent = "Install Now";
+            btn.disabled = status.is_installing;
+          }
         }
 
-        function startComfyPolling(mode) {
-            if (comfyPollInterval) clearInterval(comfyPollInterval);
-            comfyPollInterval = setInterval(() => checkComfyStatus(mode), 1000);
+        if (!isWizard) {
+          document.getElementById("settingsComfyPath").value = status.install_path || "";
+          document.getElementById("settingsComfyPathText").textContent = status.install_path || "N/A";
+          document.getElementById("settingsComfyCommitText").textContent = status.local_commit || "N/A";
         }
 
-        async function triggerComfyInstall() {
-            try {
-                const res = await fetch(`${API_URL}/api/comfy/install`, { method: "POST" });
-                if (res.ok) {
-                    const logs = document.getElementById("comfyInstallLogs");
-                    logs.textContent = "Starting installation task...";
-                    document.getElementById("comfyInstallProgressArea").style.display = "flex";
-                    document.getElementById("comfyInstallBtn").disabled = true;
-                    startComfyPolling("wizard");
-                } else {
-                    alert("Failed to start ComfyUI installation.");
-                }
-            } catch (e) {
-                alert(`Error: ${e.message}`);
+        if (status.is_installing) {
+          progArea.style.display = "flex";
+          btn.disabled = true;
+
+          const pct = Math.round(status.install_progress * 100);
+          progBar.style.width = `${pct}%`;
+          pctText.textContent = `${pct}%`;
+          stepText.textContent = `${status.install_step}: ${status.status_message}`;
+
+          if (isWizard) {
+            const logs = document.getElementById("comfyInstallLogs");
+            if (logs) {
+              logs.textContent = `[${status.install_step}] ${status.status_message}`;
             }
-        }
+          }
+        } else {
+          progArea.style.display = "none";
 
-        async function triggerComfyUpdate() {
-            try {
-                const res = await fetch(`${API_URL}/api/comfy/update`, { method: "POST" });
-                if (res.ok) {
-                    document.getElementById("settingsComfyProgressArea").style.display = "flex";
-                    document.getElementById("settingsComfyUpdateBtn").disabled = true;
-                    startComfyPolling("settings");
-                } else {
-                    alert("Failed to start ComfyUI update.");
-                }
-            } catch (e) {
-                alert(`Error: ${e.message}`);
+          if (comfyPollInterval) {
+            clearInterval(comfyPollInterval);
+            comfyPollInterval = null;
+
+            if (isWizard && status.installed) {
+              loadSettingsIntoWizard();
+            } else if (!isWizard) {
+              // Refresh settings modal fields
+              document.getElementById("settingsComfyPath").value = status.install_path || "";
+              document.getElementById("settingsComfyPathText").textContent = status.install_path || "N/A";
+              if (status.install_path) setComfyModelDefaults("settings", status.install_path);
             }
+          }
         }
+      }
 
-        async function checkComfyRemoteUpdates() {
-            try {
-                const res = await fetch(`${API_URL}/api/comfy/check-updates`, { method: "POST" });
-                if (res.ok) {
-                    const data = await res.json();
-                    const badge = document.getElementById("settingsComfyStatusBadge");
-                    const btn = document.getElementById("settingsComfyUpdateBtn");
-                    
-                    if (data.update_available) {
-                        badge.textContent = "Update Available";
-                        badge.style.background = "rgba(245, 158, 11, 0.1)";
-                        badge.style.color = "#f59e0b";
-                        badge.style.border = "1px solid rgba(245, 158, 11, 0.2)";
-                        btn.disabled = false;
-                        btn.textContent = "Update Engine";
-                    } else {
-                        btn.disabled = true;
-                        btn.textContent = "Up to Date";
-                    }
-                }
-            } catch (e) {
-                console.error("Failed to check remote updates:", e);
+      function startComfyPolling(mode) {
+        if (comfyPollInterval) clearInterval(comfyPollInterval);
+        comfyPollInterval = setInterval(() => checkComfyStatus(mode), 1000);
+      }
+
+      async function triggerComfyInstall() {
+        try {
+          const res = await fetch(`${API_URL}/api/comfy/install`, { method: "POST" });
+          if (res.ok) {
+            const logs = document.getElementById("comfyInstallLogs");
+            logs.textContent = "Starting installation task...";
+            document.getElementById("comfyInstallProgressArea").style.display = "flex";
+            document.getElementById("comfyInstallBtn").disabled = true;
+            startComfyPolling("wizard");
+          } else {
+            alert("Failed to start ComfyUI installation.");
+          }
+        } catch (e) {
+          alert(`Error: ${e.message}`);
+        }
+      }
+
+      async function triggerComfyUpdate() {
+        try {
+          const res = await fetch(`${API_URL}/api/comfy/update`, { method: "POST" });
+          if (res.ok) {
+            document.getElementById("settingsComfyProgressArea").style.display = "flex";
+            document.getElementById("settingsComfyUpdateBtn").disabled = true;
+            startComfyPolling("settings");
+          } else {
+            alert("Failed to start ComfyUI update.");
+          }
+        } catch (e) {
+          alert(`Error: ${e.message}`);
+        }
+      }
+
+      async function checkComfyRemoteUpdates() {
+        try {
+          const res = await fetch(`${API_URL}/api/comfy/check-updates`, { method: "POST" });
+          if (res.ok) {
+            const data = await res.json();
+            const badge = document.getElementById("settingsComfyStatusBadge");
+            const btn = document.getElementById("settingsComfyUpdateBtn");
+
+            if (data.update_available) {
+              badge.textContent = "Update Available";
+              badge.style.background = "rgba(245, 158, 11, 0.1)";
+              badge.style.color = "#f59e0b";
+              badge.style.border = "1px solid rgba(245, 158, 11, 0.2)";
+              btn.disabled = false;
+              btn.textContent = "Update Engine";
+            } else {
+              btn.disabled = true;
+              btn.textContent = "Up to Date";
             }
+          }
+        } catch (e) {
+          console.error("Failed to check remote updates:", e);
         }
+      }
 
-        function wizardNextStep() {
-            if (wizardCurrentStep === 1) {
-                const comfyPath = document.getElementById("wizardComfyPath").value.trim();
-                if (comfyPath) {
-                    setComfyModelDefaults("wizard", comfyPath);
-                }
-                
-                document.getElementById("wizardStep1").style.display = "none";
-                document.getElementById("wizardStep2").style.display = "flex";
-                document.getElementById("stepIndicator1").classList.remove("active");
-                document.getElementById("stepIndicator1").classList.add("done");
-                document.getElementById("stepIndicator2").classList.add("active");
-                document.getElementById("wizardBackBtn").style.display = "block";
-                wizardCurrentStep = 2;
-            } else if (wizardCurrentStep === 2) {
-                document.getElementById("wizardStep2").style.display = "none";
-                document.getElementById("wizardStep3").style.display = "flex";
-                document.getElementById("stepIndicator2").classList.remove("active");
-                document.getElementById("stepIndicator2").classList.add("done");
-                document.getElementById("stepIndicator3").classList.add("active");
-                document.getElementById("wizardNextBtn").style.display = "none";
-                document.getElementById("wizardFinishBtn").style.display = "block";
-                wizardCurrentStep = 3;
-                
-                renderWizardSummary();
-            }
+      function wizardNextStep() {
+        if (wizardCurrentStep === 1) {
+          const comfyPath = document.getElementById("wizardComfyPath").value.trim();
+          if (comfyPath) {
+            setComfyModelDefaults("wizard", comfyPath);
+          }
+
+          document.getElementById("wizardStep1").style.display = "none";
+          document.getElementById("wizardStep2").style.display = "flex";
+          document.getElementById("stepIndicator1").classList.remove("active");
+          document.getElementById("stepIndicator1").classList.add("done");
+          document.getElementById("stepIndicator2").classList.add("active");
+          document.getElementById("wizardBackBtn").style.display = "block";
+          wizardCurrentStep = 2;
+        } else if (wizardCurrentStep === 2) {
+          document.getElementById("wizardStep2").style.display = "none";
+          document.getElementById("wizardStep3").style.display = "flex";
+          document.getElementById("stepIndicator2").classList.remove("active");
+          document.getElementById("stepIndicator2").classList.add("done");
+          document.getElementById("stepIndicator3").classList.add("active");
+          document.getElementById("wizardNextBtn").style.display = "none";
+          document.getElementById("wizardFinishBtn").style.display = "block";
+          wizardCurrentStep = 3;
+
+          renderWizardSummary();
         }
+      }
 
-        function wizardPrevStep() {
-            if (wizardCurrentStep === 2) {
-                document.getElementById("wizardStep2").style.display = "none";
-                document.getElementById("wizardStep1").style.display = "flex";
-                document.getElementById("stepIndicator2").classList.remove("active");
-                document.getElementById("stepIndicator1").classList.remove("done");
-                document.getElementById("stepIndicator1").classList.add("active");
-                document.getElementById("wizardBackBtn").style.display = "none";
-                wizardCurrentStep = 1;
-            } else if (wizardCurrentStep === 3) {
-                document.getElementById("wizardStep3").style.display = "none";
-                document.getElementById("wizardStep2").style.display = "flex";
-                document.getElementById("stepIndicator3").classList.remove("active");
-                document.getElementById("stepIndicator2").classList.remove("done");
-                document.getElementById("stepIndicator2").classList.add("active");
-                document.getElementById("wizardNextBtn").style.display = "block";
-                document.getElementById("wizardFinishBtn").style.display = "none";
-                wizardCurrentStep = 2;
-            }
+      function wizardPrevStep() {
+        if (wizardCurrentStep === 2) {
+          document.getElementById("wizardStep2").style.display = "none";
+          document.getElementById("wizardStep1").style.display = "flex";
+          document.getElementById("stepIndicator2").classList.remove("active");
+          document.getElementById("stepIndicator1").classList.remove("done");
+          document.getElementById("stepIndicator1").classList.add("active");
+          document.getElementById("wizardBackBtn").style.display = "none";
+          wizardCurrentStep = 1;
+        } else if (wizardCurrentStep === 3) {
+          document.getElementById("wizardStep3").style.display = "none";
+          document.getElementById("wizardStep2").style.display = "flex";
+          document.getElementById("stepIndicator3").classList.remove("active");
+          document.getElementById("stepIndicator2").classList.remove("done");
+          document.getElementById("stepIndicator2").classList.add("active");
+          document.getElementById("wizardNextBtn").style.display = "block";
+          document.getElementById("wizardFinishBtn").style.display = "none";
+          wizardCurrentStep = 2;
         }
+      }
 
-        function renderWizardSummary() {
-            const main = document.getElementById("wizardMainModel").value;
-            const uncond = document.getElementById("wizardUncondModel").value;
-            const clip = document.getElementById("wizardTextEncoder").value;
-            const vae = document.getElementById("wizardVae").value;
+      function renderWizardSummary() {
+        const main = document.getElementById("wizardMainModel").value;
+        const uncond = document.getElementById("wizardUncondModel").value;
+        const clip = document.getElementById("wizardTextEncoder").value;
+        const vae = document.getElementById("wizardVae").value;
 
-            const pathStyle = `font-family: monospace; color: #fff; display: block; word-break: break-all; overflow-wrap: break-word; margin-top: 0.1rem; margin-bottom: 0.4rem; font-size: 0.75rem; opacity: 0.85;`;
-            const rowStyle = `margin-bottom: 0.15rem; color: var(--text-muted);`;
+        const pathStyle = `font-family: monospace; color: #fff; display: block; word-break: break-all; overflow-wrap: break-word; margin-top: 0.1rem; margin-bottom: 0.4rem; font-size: 0.75rem; opacity: 0.85;`;
+        const rowStyle = `margin-bottom: 0.15rem; color: var(--text-muted);`;
 
-            const summaryDiv = document.getElementById("wizardValidationSummary");
-            summaryDiv.innerHTML = `
+        const summaryDiv = document.getElementById("wizardValidationSummary");
+        summaryDiv.innerHTML = `
                 <div style="margin-bottom: 0.75rem; font-weight: 700; color: var(--accent-teal); font-size: 0.85rem;">Configuration Summary</div>
                 <div style="${rowStyle}">📄 <strong>Conditional UNet</strong><span style="${pathStyle}">${main}</span></div>
                 <div style="${rowStyle}">📄 <strong>Unconditional UNet</strong><span style="${pathStyle}">${uncond}</span></div>
@@ -1873,123 +2080,122 @@
                 <div style="${rowStyle}">📄 <strong>VAE</strong><span style="${pathStyle}">${vae}</span></div>
                 <div style="margin-top: 0.75rem; font-size: 0.72rem; color: var(--text-muted); border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.5rem;">Clicking 'Save & Start' will write to .env and trigger hardware warmup verification.</div>
             `;
-        }
+      }
 
-        async function wizardSaveAndReload() {
-            const finishBtn = document.getElementById("wizardFinishBtn");
-            finishBtn.disabled = true;
-            finishBtn.textContent = "Saving & Loading...";
+      async function wizardSaveAndReload() {
+        const finishBtn = document.getElementById("wizardFinishBtn");
+        finishBtn.disabled = true;
+        finishBtn.textContent = "Saving & Loading...";
 
-            try {
-                const settingsData = {
-                    main_model: document.getElementById("wizardMainModel").value.trim(),
-                    uncond_model: document.getElementById("wizardUncondModel").value.trim(),
-                    text_encoder: document.getElementById("wizardTextEncoder").value.trim(),
-                    vae: document.getElementById("wizardVae").value.trim(),
-                    comfyui_path: document.getElementById("wizardComfyPath").value.trim()
-                };
+        try {
+          const settingsData = {
+            main_model: document.getElementById("wizardMainModel").value.trim(),
+            uncond_model: document.getElementById("wizardUncondModel").value.trim(),
+            text_encoder: document.getElementById("wizardTextEncoder").value.trim(),
+            vae: document.getElementById("wizardVae").value.trim(),
+            comfyui_path: document.getElementById("wizardComfyPath").value.trim(),
+          };
 
-                const saveRes = await fetch(`${API_URL}/api/settings`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(settingsData)
-                });
+          const saveRes = await fetch(`${API_URL}/api/settings`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(settingsData),
+          });
 
-                if (!saveRes.ok) throw new Error("Failed to save configuration paths");
+          if (!saveRes.ok) throw new Error("Failed to save configuration paths");
 
-                const reloadRes = await fetch(`${API_URL}/api/settings/reload`, { method: "POST" });
-                if (!reloadRes.ok) throw new Error("Failed to reload inference engine");
+          const reloadRes = await fetch(`${API_URL}/api/settings/reload`, { method: "POST" });
+          if (!reloadRes.ok) throw new Error("Failed to reload inference engine");
 
-                const reloadData = await reloadRes.json();
-                if (reloadData.health && reloadData.health.status === "ready") {
-                    hideSetupWizard();
-                    checkBackendHealth();
-                } else {
-                    const valReport = reloadData.health ? reloadData.health.model_validation : {};
-                    let errors = [];
-                    for (let [model, present] of Object.entries(valReport)) {
-                        if (!present) errors.push(model);
-                    }
-                    throw new Error(`Model weights missing: ${errors.join(", ")}`);
-                }
-            } catch (e) {
-                alert(`Configuration Error: ${e.message}\nPlease verify all paths are correct.`);
-            } finally {
-                finishBtn.disabled = false;
-                finishBtn.textContent = "Save & Start";
+          const reloadData = await reloadRes.json();
+          if (reloadData.health && reloadData.health.status === "ready") {
+            hideSetupWizard();
+            checkBackendHealth();
+          } else {
+            const valReport = reloadData.health ? reloadData.health.model_validation : {};
+            let errors = [];
+            for (let [model, present] of Object.entries(valReport)) {
+              if (!present) errors.push(model);
             }
+            throw new Error(`Model weights missing: ${errors.join(", ")}`);
+          }
+        } catch (e) {
+          alert(`Configuration Error: ${e.message}\nPlease verify all paths are correct.`);
+        } finally {
+          finishBtn.disabled = false;
+          finishBtn.textContent = "Save & Start";
         }
+      }
 
-        async function openSettingsModal() {
-            try {
-                const res = await fetch(`${API_URL}/api/settings`);
-                if (res.ok) {
-                    const data = await res.json();
-                    document.getElementById("settingsMainModel").value = data.main_model || "";
-                    document.getElementById("settingsUncondModel").value = data.uncond_model || "";
-                    document.getElementById("settingsTextEncoder").value = data.text_encoder || "";
-                    document.getElementById("settingsVae").value = data.vae || "";
-                    document.getElementById("settingsOutputPath").value = data.output_path || "";
-                    document.getElementById("settingsDevice").value = data.device || "cuda";
-                    document.getElementById("settingsPort").value = data.port || 8000;
-                    document.getElementById("settingsComfyPath").value = data.comfyui_path || "";
-                    document.getElementById("settingsComfyPathText").textContent = data.comfyui_path || "N/A";
-                    
-                    document.getElementById("settingsModal").style.display = "flex";
-                    
-                    await checkComfyStatus("settings");
-                    checkComfyRemoteUpdates();
-                }
-            } catch (e) {
-                alert(`Failed to load configurations: ${e.message}`);
-            }
+      async function openSettingsModal() {
+        try {
+          const res = await fetch(`${API_URL}/api/settings`);
+          if (res.ok) {
+            const data = await res.json();
+            document.getElementById("settingsMainModel").value = data.main_model || "";
+            document.getElementById("settingsUncondModel").value = data.uncond_model || "";
+            document.getElementById("settingsTextEncoder").value = data.text_encoder || "";
+            document.getElementById("settingsVae").value = data.vae || "";
+            document.getElementById("settingsOutputPath").value = data.output_path || "";
+            document.getElementById("settingsDevice").value = data.device || "cuda";
+            document.getElementById("settingsPort").value = data.port || 8000;
+            document.getElementById("settingsComfyPath").value = data.comfyui_path || "";
+            document.getElementById("settingsComfyPathText").textContent = data.comfyui_path || "N/A";
+
+            document.getElementById("settingsModal").style.display = "flex";
+
+            await checkComfyStatus("settings");
+            checkComfyRemoteUpdates();
+          }
+        } catch (e) {
+          alert(`Failed to load configurations: ${e.message}`);
         }
+      }
 
-        function closeSettingsModal() {
-            document.getElementById("settingsModal").style.display = "none";
+      function closeSettingsModal() {
+        document.getElementById("settingsModal").style.display = "none";
+      }
+
+      async function saveSettingsFromModal() {
+        const saveBtn = document.querySelector("#settingsModal .generate-btn");
+        const origText = saveBtn.textContent;
+        saveBtn.disabled = true;
+        saveBtn.textContent = "Saving & Applying...";
+
+        try {
+          const settingsData = {
+            main_model: document.getElementById("settingsMainModel").value.trim(),
+            uncond_model: document.getElementById("settingsUncondModel").value.trim(),
+            text_encoder: document.getElementById("settingsTextEncoder").value.trim(),
+            vae: document.getElementById("settingsVae").value.trim(),
+            output_path: document.getElementById("settingsOutputPath").value.trim(),
+            device: document.getElementById("settingsDevice").value.trim(),
+            port: parseInt(document.getElementById("settingsPort").value),
+            comfyui_path: document.getElementById("settingsComfyPath").value.trim(),
+          };
+
+          const saveRes = await fetch(`${API_URL}/api/settings`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(settingsData),
+          });
+
+          if (!saveRes.ok) throw new Error("Failed to save configuration settings");
+
+          const reloadRes = await fetch(`${API_URL}/api/settings/reload`, { method: "POST" });
+          if (!reloadRes.ok) throw new Error("Failed to reload engine weights");
+
+          alert("Configuration saved and applied successfully!");
+          closeSettingsModal();
+          checkBackendHealth();
+          fetchHistory();
+        } catch (e) {
+          alert(`Error saving configuration: ${e.message}`);
+        } finally {
+          saveBtn.disabled = false;
+          saveBtn.textContent = origText;
         }
-
-        async function saveSettingsFromModal() {
-            const saveBtn = document.querySelector("#settingsModal .generate-btn");
-            const origText = saveBtn.textContent;
-            saveBtn.disabled = true;
-            saveBtn.textContent = "Saving & Applying...";
-
-            try {
-                const settingsData = {
-                    main_model: document.getElementById("settingsMainModel").value.trim(),
-                    uncond_model: document.getElementById("settingsUncondModel").value.trim(),
-                    text_encoder: document.getElementById("settingsTextEncoder").value.trim(),
-                    vae: document.getElementById("settingsVae").value.trim(),
-                    output_path: document.getElementById("settingsOutputPath").value.trim(),
-                    device: document.getElementById("settingsDevice").value.trim(),
-                    port: parseInt(document.getElementById("settingsPort").value),
-                    comfyui_path: document.getElementById("settingsComfyPath").value.trim()
-                };
-
-                const saveRes = await fetch(`${API_URL}/api/settings`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(settingsData)
-                });
-
-                if (!saveRes.ok) throw new Error("Failed to save configuration settings");
-
-                const reloadRes = await fetch(`${API_URL}/api/settings/reload`, { method: "POST" });
-                if (!reloadRes.ok) throw new Error("Failed to reload engine weights");
-
-                alert("Configuration saved and applied successfully!");
-                closeSettingsModal();
-                checkBackendHealth();
-                fetchHistory();
-
-            } catch (e) {
-                alert(`Error saving configuration: ${e.message}`);
-            } finally {
-                saveBtn.disabled = false;
-                saveBtn.textContent = origText;
-            }
-        }
+      }
     </script>
-</body>
+  </body>
 </html>
